@@ -2289,12 +2289,17 @@
       "jumped": true,
       "steps": 7123,
       "run_km": null
+    },
+    "2026-04-04": {
+      "jumped": false,
+      "steps": 8024,
+      "run_km": null
     }
   },
   "stats": {
     "total_jump_days": 25,
-    "current_streak": 1,
-    "total_steps": 907468,
+    "current_streak": 0,
+    "total_steps": 915492,
     "total_run_km": 10
   }
 }
