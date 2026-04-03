@@ -252,18 +252,27 @@ img{max-width:100%;display:block}
 .pk-actions{display:flex;gap:6px}
 
 /* ===== CONVERSATION ===== */
-.conv-list{display:flex;flex-direction:column;gap:16px}
-.conv-date{font-size:12px;color:var(--gray);text-align:center;margin-bottom:6px}
-.bubble-wrap{display:flex;flex-direction:column;gap:8px}
-.bubble-row{display:flex;align-items:flex-start;gap:8px}
-.bubble-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.avatar-child{background:linear-gradient(135deg,#FFB6C1,#FFD700)}
-.avatar-me{background:linear-gradient(135deg,var(--coral-light),var(--purple-light))}
-.bubble-text{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5}
-.bubble-child .bubble-text{background:white;box-shadow:var(--shadow);border-top-left-radius:4px}
-.bubble-me{flex-direction:row-reverse}
-.bubble-me .bubble-text{background:var(--coral-light);color:var(--coral-dark);border-top-right-radius:4px}
-.conv-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:4px}
+/* ===== CONVERSATION - WeChat style ===== */
+.conv-list{display:flex;flex-direction:column;gap:0;background:#EDEDED;border-radius:var(--radius);padding:12px 8px;min-height:120px}
+.conv-date-divider{font-size:11px;color:#888;text-align:center;margin:10px 0 8px;background:rgba(0,0,0,.06);display:inline-block;padding:2px 10px;border-radius:10px;align-self:center}
+.bubble-wrap{display:flex;flex-direction:column;gap:0}
+.bubble-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:12px;padding:0 4px}
+.bubble-avatar{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.avatar-qiqi{background:linear-gradient(135deg,#a8edea,#fed6e3)}
+.avatar-huahua{background:linear-gradient(135deg,#f093fb,#f5576c)}
+.bubble-text{max-width:72%;padding:9px 13px;font-size:14px;line-height:1.55;position:relative;word-break:break-word}
+/* 左侧（小七）气泡 */
+.bubble-left .bubble-text{background:white;border-radius:0 12px 12px 12px;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.bubble-left .bubble-text::before{content:'';position:absolute;left:-7px;top:10px;border:7px solid transparent;border-right:7px solid white;border-left:0;margin-top:-3px}
+/* 右侧（花花）气泡 */
+.bubble-right{flex-direction:row-reverse}
+.bubble-right .bubble-text{background:#95EC69;border-radius:12px 0 12px 12px;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.bubble-right .bubble-text::after{content:'';position:absolute;right:-7px;top:10px;border:7px solid transparent;border-left:7px solid #95EC69;border-right:0;margin-top:-3px}
+/* 气泡内说话人名字 */
+.bubble-name{font-size:11px;color:#888;margin-bottom:3px;padding:0 2px}
+.bubble-left-wrap{display:flex;flex-direction:column;align-items:flex-start}
+.bubble-right-wrap{display:flex;flex-direction:column;align-items:flex-end}
+.conv-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:4px;padding-right:46px}
 
 /* ===== CUSTOM ===== */
 .custom-list{display:flex;flex-direction:column;gap:12px}
@@ -885,27 +894,54 @@ function renderConversation() {
   if(!recs.length) return `
     <div class="empty">
       <div class="empty-icon">💬</div>
-      <div class="empty-text">记录孩子说的那些可爱的话～</div>
+      <div class="empty-text">记录小七和花花的对话～</div>
     </div>`;
   const sorted = [...recs].sort((a,b)=>b.date.localeCompare(a.date));
-  return `<div class="conv-list">${sorted.map(r=>`
-    <div>
-      <div class="conv-date">${fmtDate(r.date)}</div>
-      <div class="bubble-wrap">
-        <div class="bubble-row bubble-child">
-          <div class="bubble-avatar avatar-child">👧</div>
-          <div class="bubble-text">${escHtml(r.words)}</div>
-        </div>
-        ${r.feeling?`<div class="bubble-row bubble-me">
-          <div class="bubble-avatar avatar-me">💝</div>
-          <div class="bubble-text">${escHtml(r.feeling)}</div>
-        </div>`:''}
-      </div>
-      <div class="conv-actions">
-        <button class="action-btn action-img" onclick='genCard("conversation",${JSON.stringify(r)})'>📷 生成图片</button>
-        <button class="action-btn action-del" onclick="delRecord('conversation','${r.id}')">删除</button>
-      </div>
-    </div>`).join('')}</div>`;
+  // 按日期分组
+  const byDate = {};
+  sorted.forEach(r=>{ if(!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
+  const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+  return `<div class="conv-list">${dates.map(date=>{
+    const dayRecs = byDate[date];
+    return `<div class="conv-date-divider">${fmtDate(date)}</div>
+    <div class="bubble-wrap">
+      ${dayRecs.map(r=>{
+        // 判断谁先说：有 speaker 字段则按 speaker，否则默认小七先说
+        const speaker = r.speaker || 'qiqi';
+        const isQiqi = speaker === 'qiqi';
+        const bubbles = [];
+        // 小七的话
+        if(r.words) {
+          const wSpeaker = r.speaker2 ? (isQiqi ? 'qiqi' : 'huahua') : 'qiqi';
+          const isLeft = wSpeaker === 'qiqi';
+          bubbles.push(`<div class="bubble-row ${isLeft?'bubble-left':'bubble-right'}">
+            <div class="bubble-avatar ${isLeft?'avatar-qiqi':'avatar-huahua'}">${isLeft?'🧒':'👩'}</div>
+            <div class="${isLeft?'bubble-left-wrap':'bubble-right-wrap'}">
+              <div class="bubble-name">${isLeft?'小七':'花花'}</div>
+              <div class="bubble-text">${escHtml(r.words)}</div>
+            </div>
+          </div>`);
+        }
+        // 花花的回应
+        if(r.feeling) {
+          bubbles.push(`<div class="bubble-row bubble-right">
+            <div class="bubble-avatar avatar-huahua">👩</div>
+            <div class="bubble-right-wrap">
+              <div class="bubble-name">花花</div>
+              <div class="bubble-text">${escHtml(r.feeling)}</div>
+            </div>
+          </div>`);
+        }
+        return `<div style="position:relative">
+          ${bubbles.join('')}
+          <div class="conv-actions">
+            <button class="action-btn action-img" onclick='genCard("conversation",${JSON.stringify(r)})'>📷 生成图片</button>
+            <button class="action-btn action-del" onclick="delRecord('conversation','${r.id}')">删除</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('')}</div>`;
 }
 
 // ─────────────────────────────────────────────
@@ -1114,20 +1150,24 @@ async function saveParenting() {
 }
 
 function openAddConversation() {
-  openModal('💬 记录亲子对话', `
-    <div class="form-group">
-      <label class="form-label">孩子说的话 *</label>
-      <textarea class="form-textarea" id="cv-words" placeholder="宝贝说了什么～"></textarea>
+  openModal('💬 记录对话', `
+    <div style="display:flex;gap:8px;margin-bottom:14px;background:#EDEDED;border-radius:12px;padding:10px 12px;align-items:center">
+      <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#a8edea,#fed6e3);display:flex;align-items:center;justify-content:center;font-size:20px">🧒</div>
+      <div style="font-size:13px;color:#555;line-height:1.4"><b>小七</b> 和 <b>花花</b> 的对话<br><span style="font-size:11px;color:#888">小七的话在左，花花的回应在右</span></div>
     </div>
     <div class="form-group">
-      <label class="form-label">你的感受（可选）</label>
-      <textarea class="form-textarea" id="cv-feeling" placeholder="听到后你的感受..."></textarea>
+      <label class="form-label">🧒 小七说…… *</label>
+      <textarea class="form-textarea" id="cv-words" placeholder="小七说了什么～" style="min-height:72px"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">👩 花花回应……（可选）</label>
+      <textarea class="form-textarea" id="cv-feeling" placeholder="花花怎么回应的..." style="min-height:72px"></textarea>
     </div>
     <div class="form-group">
       <label class="form-label">日期</label>
       <input class="form-input" type="date" id="cv-date" value="${todaySH()}">
     </div>
-    <button class="btn btn-full" style="background:linear-gradient(135deg,var(--purple),#b5c8f9);color:white;box-shadow:0 3px 12px rgba(199,206,234,.5)" onclick="saveConversation()">💾 保存</button>
+    <button class="btn btn-full" style="background:linear-gradient(135deg,#C7CEEA,#b5c8f9);color:#4a4a7a;font-weight:600;box-shadow:0 3px 12px rgba(199,206,234,.5)" onclick="saveConversation()">💾 保存对话</button>
   `);
 }
 
