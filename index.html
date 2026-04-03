@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>她的生活 🌸</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FF6B6B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="她的生活">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌸</text></svg>">
+<style>
+/* ===== RESET ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  background:#FFF9F0;color:#333;min-height:100vh;overflow-x:hidden
+}
+button{cursor:pointer;border:none;outline:none}
+input,textarea,select{outline:none;font-family:inherit}
+img{max-width:100%;display:block}
+
+/* ===== VARIABLES ===== */
+:root{
+  --coral:#FF6B6B;--coral-light:#FFE5E5;--coral-dark:#e55555;
+  --mint:#4ECDC4;--mint-light:#E0F7F5;
+  --cream:#FFF9F0;--yellow:#FFE66D;--yellow-light:#FFF8DC;
+  --purple:#C7CEEA;--purple-light:#EEF0FA;
+  --gray:#888;--gray-light:#f0f0f0;
+  --text:#333;--text-light:#666;--border:#eee;
+  --shadow:0 2px 12px rgba(0,0,0,0.08);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.12);
+  --radius:16px;--radius-sm:10px;
+  --header-height:56px;
+}
+
+/* ===== LAYOUT ===== */
+#app{display:flex;flex-direction:column;min-height:100vh}
+
+/* ===== HEADER ===== */
+.header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,249,240,0.96);backdrop-filter:blur(10px);
+  height:var(--header-height);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;border-bottom:1px solid var(--border);
+}
+.header-title{
+  font-size:20px;font-weight:800;
+  background:linear-gradient(135deg,var(--coral),var(--mint));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.btn-icon{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:white;box-shadow:var(--shadow);font-size:18px;transition:transform .15s;
+}
+.btn-icon:active{transform:scale(.92)}
+
+/* ===== TAB BAR ===== */
+.tab-bar{
+  display:flex;align-items:center;background:white;
+  overflow-x:auto;overflow-y:hidden;
+  padding:0 12px;border-bottom:1px solid var(--border);
+  scrollbar-width:none;-ms-overflow-style:none;
+  gap:4px;height:46px;flex-shrink:0;
+}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab-item{
+  flex-shrink:0;padding:6px 14px;border-radius:20px;
+  font-size:14px;font-weight:500;color:var(--text-light);
+  background:transparent;transition:all .2s;white-space:nowrap;
+}
+.tab-item.active{background:var(--coral);color:white;box-shadow:0 2px 8px rgba(255,107,107,.35)}
+.tab-item:not(.active):hover{background:var(--gray-light)}
+.tab-add{
+  flex-shrink:0;width:30px;height:30px;border-radius:50%;
+  background:var(--gray-light);color:var(--gray);
+  font-size:20px;display:flex;align-items:center;justify-content:center;margin-left:4px;
+}
+
+/* ===== MAIN ===== */
+.main{flex:1;padding:16px;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+
+/* ===== CARD ===== */
+.card{background:white;border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+.card-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* ===== BUTTONS ===== */
+.btn{
+  padding:10px 20px;border-radius:25px;font-size:14px;font-weight:600;
+  transition:all .2s;display:inline-flex;align-items:center;gap:6px;
+}
+.btn:active{transform:scale(.96)}
+.btn-primary{background:var(--coral);color:white;box-shadow:0 3px 12px rgba(255,107,107,.35)}
+.btn-mint{background:var(--mint);color:white;box-shadow:0 3px 12px rgba(78,205,196,.35)}
+.btn-ghost{background:var(--gray-light);color:var(--text)}
+.btn-yellow{background:var(--yellow);color:#7a5c00;box-shadow:0 3px 12px rgba(255,230,109,.4)}
+.btn-sm{padding:6px 14px;font-size:13px}
+.btn-full{width:100%;justify-content:center}
+
+/* ===== FORM ===== */
+.form-group{margin-bottom:14px}
+.form-label{font-size:13px;color:var(--text-light);margin-bottom:6px;display:block}
+.form-input{
+  width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:15px;color:var(--text);background:var(--cream);transition:border-color .2s;
+}
+.form-input:focus{border-color:var(--coral)}
+.form-textarea{
+  width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:15px;color:var(--text);background:var(--cream);resize:vertical;min-height:80px;
+  transition:border-color .2s;font-family:inherit;
+}
+.form-textarea:focus{border-color:var(--coral)}
+.form-select{
+  width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-size:15px;color:var(--text);background:var(--cream);appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6,9 12,15 18,9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;
+}
+
+/* ===== MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);
+  display:none;align-items:flex-end;justify-content:center;
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:white;border-radius:24px 24px 0 0;
+  width:100%;max-width:480px;max-height:90vh;overflow-y:auto;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+  animation:slideUp .3s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-size:18px;font-weight:700}
+.modal-close{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--gray-light);color:var(--gray);font-size:18px;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ===== PREVIEW MODAL (canvas image) ===== */
+#preview-overlay{
+  position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.85);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+}
+#preview-overlay.open{display:flex}
+#preview-canvas{
+  max-width:min(90vw,360px);max-height:80vh;border-radius:12px;
+  box-shadow:0 8px 40px rgba(0,0,0,.5);
+}
+.preview-hint{color:rgba(255,255,255,.7);font-size:13px;text-align:center}
+.preview-btns{display:flex;gap:10px}
+.preview-close-btn{
+  padding:10px 28px;border-radius:25px;
+  background:rgba(255,255,255,.15);color:white;font-size:14px;font-weight:600;
+  border:1.5px solid rgba(255,255,255,.3);
+}
+.preview-dl-btn{
+  padding:10px 28px;border-radius:25px;
+  background:var(--coral);color:white;font-size:14px;font-weight:600;
+}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;
+  transform:translateX(-50%) translateY(20px);
+  background:rgba(50,50,50,.9);color:white;
+  padding:10px 20px;border-radius:25px;font-size:14px;white-space:nowrap;
+  z-index:9999;opacity:0;transition:all .3s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ===== LOADING / EMPTY ===== */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--gray);gap:8px;font-size:14px}
+.spinner{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--coral);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:48px 20px;color:var(--gray)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.empty-text{font-size:15px;margin-bottom:16px}
+
+/* ===== EXERCISE ===== */
+.exercise-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat-box{background:var(--cream);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+.stat-num{font-size:26px;font-weight:800;color:var(--coral);line-height:1}
+.stat-num.mint{color:var(--mint)}
+.stat-num.purple{color:#8b7fd4}
+.stat-label{font-size:11px;color:var(--text-light);margin-top:4px}
+.checkin-btn{
+  width:100%;padding:16px;border-radius:var(--radius);
+  font-size:18px;font-weight:700;
+  background:linear-gradient(135deg,var(--coral),#ff8e8e);color:white;
+  box-shadow:0 4px 20px rgba(255,107,107,.4);
+  transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.checkin-btn:active{transform:scale(.97)}
+.checkin-btn.done{background:linear-gradient(135deg,#4CAF50,#66BB6A);box-shadow:0 4px 20px rgba(76,175,80,.4)}
+.heatmap-scroll{overflow-x:auto;padding-bottom:6px;margin-top:12px}
+.heatmap-inner{display:inline-flex;flex-direction:column;gap:2px;user-select:none}
+.heatmap-months{display:flex;font-size:10px;color:var(--gray);margin-bottom:4px;gap:0}
+.heatmap-grid{display:inline-grid;grid-template-rows:repeat(7,11px);grid-auto-flow:column;gap:2px}
+.hm-cell{width:11px;height:11px;border-radius:2px;background:#ebedf0;flex-shrink:0}
+.hm-cell.on{background:var(--coral)}
+.hm-cell.today-cell{box-shadow:0 0 0 1.5px var(--coral-dark)}
+.record-row{display:flex;gap:8px;align-items:center;margin-top:10px}
+.record-row .form-input{flex:1}
+
+/* ===== FOOD ===== */
+.food-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.food-card{background:white;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);transition:transform .15s}
+.food-card:active{transform:scale(.97)}
+.food-img{width:100%;aspect-ratio:1/1;object-fit:cover}
+.food-img-placeholder{
+  width:100%;aspect-ratio:1/1;
+  background:linear-gradient(135deg,#FFE5C4,#FFD580);
+  display:flex;align-items:center;justify-content:center;font-size:40px;
+}
+.food-body{padding:10px}
+.food-name{font-size:14px;font-weight:700;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.food-date{font-size:11px;color:var(--gray);margin-bottom:3px}
+.food-desc{font-size:12px;color:var(--text-light);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.food-actions{display:flex;gap:6px;padding:0 10px 10px}
+
+/* ===== TRAVEL ===== */
+.timeline{position:relative;padding-left:26px}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--mint),var(--purple))}
+.tl-item{position:relative;margin-bottom:18px}
+.tl-dot{position:absolute;left:-22px;top:14px;width:12px;height:12px;border-radius:50%;background:var(--mint);border:2.5px solid white;box-shadow:0 0 0 2px var(--mint)}
+.travel-card{background:white;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.travel-img{width:100%;height:130px;object-fit:cover}
+.travel-img-placeholder{width:100%;height:130px;background:linear-gradient(135deg,var(--mint-light),var(--purple-light));display:flex;align-items:center;justify-content:center;font-size:48px}
+.travel-body{padding:12px}
+.travel-place{font-size:15px;font-weight:700;margin-bottom:3px}
+.travel-date{font-size:12px;color:var(--gray);margin-bottom:6px}
+.travel-note{font-size:14px;color:var(--text-light);line-height:1.5}
+.travel-actions{display:flex;gap:6px;padding:4px 12px 12px}
+
+/* ===== PARENTING ===== */
+.parenting-list{display:flex;flex-direction:column;gap:12px}
+.pk-card{background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);border-left:4px solid var(--yellow)}
+.pk-source{display:inline-block;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;background:var(--yellow);color:#856404;margin-bottom:8px}
+.pk-source.book{background:var(--purple-light);color:#5c4d9e}
+.pk-source.other{background:var(--mint-light);color:#2a7d78}
+.pk-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.pk-content{font-size:14px;color:var(--text-light);line-height:1.6}
+.pk-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.pk-date{font-size:12px;color:var(--gray)}
+.pk-actions{display:flex;gap:6px}
+
+/* ===== CONVERSATION ===== */
+.conv-list{display:flex;flex-direction:column;gap:16px}
+.conv-date{font-size:12px;color:var(--gray);text-align:center;margin-bottom:6px}
+.bubble-wrap{display:flex;flex-direction:column;gap:8px}
+.bubble-row{display:flex;align-items:flex-start;gap:8px}
+.bubble-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.avatar-child{background:linear-gradient(135deg,#FFB6C1,#FFD700)}
+.avatar-me{background:linear-gradient(135deg,var(--coral-light),var(--purple-light))}
+.bubble-text{max-width:78%;padding:10px 14px;border-radius:18px;font-size:14px;line-height:1.5}
+.bubble-child .bubble-text{background:white;box-shadow:var(--shadow);border-top-left-radius:4px}
+.bubble-me{flex-direction:row-reverse}
+.bubble-me .bubble-text{background:var(--coral-light);color:var(--coral-dark);border-top-right-radius:4px}
+.conv-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:4px}
+
+/* ===== CUSTOM ===== */
+.custom-list{display:flex;flex-direction:column;gap:12px}
+.custom-card{background:white;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.custom-card-title{font-size:15px;font-weight:700;margin-bottom:6px}
+.custom-card-content{font-size:14px;color:var(--text-light);line-height:1.6}
+.custom-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.custom-card-date{font-size:12px;color:var(--gray)}
+
+/* ===== ACTION BTN (小按钮) ===== */
+.action-btn{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;transition:all .15s}
+.action-btn:active{transform:scale(.94)}
+.action-del{background:var(--coral-light);color:var(--coral)}
+.action-img{background:linear-gradient(135deg,#FFE5E5,#FFD580);color:#b85c00}
+.action-img:hover{box-shadow:0 2px 8px rgba(255,107,107,.3)}
+
+/* ===== FAB ===== */
+.fab{
+  position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom));
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,var(--coral),#ff8e8e);color:white;font-size:26px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 20px rgba(255,107,107,.5);z-index:50;transition:transform .2s;
+}
+.fab:active{transform:scale(.92)}
+
+/* ===== SETTINGS ===== */
+.set-section{margin-bottom:20px}
+.set-label{font-size:13px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.set-row{
+  background:white;border-radius:var(--radius-sm);padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;box-shadow:var(--shadow);
+}
+.token-badge{font-size:12px;color:var(--mint);font-family:monospace;background:var(--mint-light);padding:2px 8px;border-radius:6px}
+
+/* ===== IMG UPLOAD ===== */
+.img-upload{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;transition:border-color .2s}
+.img-upload:hover{border-color:var(--coral)}
+.img-preview-thumb{max-height:180px;border-radius:var(--radius-sm);margin:0 auto;margin-top:8px}
+.img-hint{font-size:12px;color:var(--gray);margin-top:6px}
+
+/* ===== RESPONSIVE ===== */
+@media(min-width:480px){
+  .main,.tab-bar{max-width:480px;margin-left:auto;margin-right:auto}
+  .header{max-width:480px;margin:0 auto}
+  body{background:#f0ede8}
+  #app{align-items:center}
+  .header,.tab-bar{width:100%}
+  .modal{border-radius:24px;max-height:80vh}
+  .modal-overlay{align-items:center}
+  #preview-canvas{max-width:300px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="header">
+    <div class="header-title">她的生活 🌸</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-icon" id="btn-settings">⚙️</button>
+    </div>
+  </header>
+  <div class="tab-bar" id="tab-bar"></div>
+  <main class="main" id="main">
+    <div class="loading"><div class="spinner"></div>加载中…</div>
+  </main>
+  <button class="fab" id="fab">＋</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 通用 Modal -->
+<div class="modal-overlay" id="modal-ov">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-ttl">新增</span>
+      <button class="modal-close" id="modal-x">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<!-- 设置 Modal -->
+<div class="modal-overlay" id="set-ov">
+  <div class="modal" id="set-modal">
+    <div class="modal-header">
+      <span class="modal-title">⚙️ 设置</span>
+      <button class="modal-close" id="set-x">✕</button>
+    </div>
+    <div id="set-body"></div>
+  </div>
+</div>
+
+<!-- Canvas 图片预览 -->
+<div id="preview-overlay">
+  <canvas id="preview-canvas"></canvas>
+  <div class="preview-hint">长按图片可保存到手机相册 📱</div>
+  <div class="preview-btns">
+    <button class="preview-dl-btn" id="preview-dl">⬇️ 下载图片</button>
+    <button class="preview-close-btn" id="preview-close">关闭</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const OWNER = 'SherryWang-1207';
+const REPO  = 'Sherry-life-journal';
+const BRANCH = 'main';
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+
+const BUILTIN_TABS = [
+  {id:'exercise',    label:'💪 运动',   icon:'💪'},
+  {id:'food',        label:'🍳 美食',   icon:'🍳'},
+  {id:'travel',      label:'🗺️ 出游',   icon:'🗺️'},
+  {id:'parenting',   label:'📚 育儿',   icon:'📚'},
+  {id:'conversation',label:'💬 对话',  icon:'💬'},
+];
+
+// 板块主题色（用于成图）
+const TAB_THEME = {
+  exercise:    {bg:['#FF6B6B','#FFB347','#FFE66D'], accent:'#FF6B6B', icon:'💪'},
+  food:        {bg:['#FFD580','#FF9F43','#FFF3CD'], accent:'#FF9F43', icon:'🍳'},
+  travel:      {bg:['#4ECDC4','#45B7D1','#C7F5F2'], accent:'#4ECDC4', icon:'🗺️'},
+  parenting:   {bg:['#A8E6CF','#4ECDC4','#DCEEFB'], accent:'#4ECDC4', icon:'📚'},
+  conversation:{bg:['#C7CEEA','#B5C8F9','#EEF0FA'], accent:'#8B7FD4', icon:'💬'},
+  custom:      {bg:['#FFB6C1','#FF69B4','#FFF0F3'], accent:'#FF69B4', icon:'✨'},
+};
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+const S = {
+  tab: 'exercise',
+  data: {},   // {exercise:{},food:{},travel:{},parenting:{},conversation:{},custom:{}}
+  sha:  {},   // file sha for writes
+  customTabs: [], // [{id,label}]
+};
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+const getToken = () => localStorage.getItem('gh_pat') || '';
+const setToken = t  => localStorage.setItem('gh_pat', t);
+
+function todaySH() {
+  return new Date().toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'}).slice(0,10);
+}
+function fmtDate(d) {
+  if(!d) return '';
+  try { return new Date(d+'T00:00:00+08:00').toLocaleDateString('zh-CN',{year:'numeric',month:'long',day:'numeric'}); }
+  catch(e){ return d; }
+}
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+let _toastTimer;
+function toast(msg, ms=2200) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>el.classList.remove('show'), ms);
+}
+
+function openModal(title, html, cb) {
+  document.getElementById('modal-ttl').textContent = title;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-ov').classList.add('open');
+  if(cb) cb();
+}
+function closeModal() { document.getElementById('modal-ov').classList.remove('open'); }
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────
+// GITHUB API
+// ─────────────────────────────────────────────
+async function ghGet(path) {
+  const r = await fetch(`${API}/contents/${path}?ref=${BRANCH}&t=${Date.now()}`,{
+    headers:{'Accept':'application/vnd.github+json'}
+  });
+  if(!r.ok) throw new Error('读取失败 '+r.status);
+  const j = await r.json();
+  S.sha[path] = j.sha;
+  return JSON.parse(atob(j.content.replace(/\n/g,'')));
+}
+
+async function ghPut(path, data) {
+  const token = getToken();
+  if(!token) { toast('⚠️ 请先在设置中填写 GitHub Token'); return false; }
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(data,null,2))));
+  const body = {message:`Update ${path}`,content,branch:BRANCH};
+  if(S.sha[path]) body.sha = S.sha[path];
+  const r = await fetch(`${API}/contents/${path}`,{
+    method:'PUT',
+    headers:{
+      'Authorization':`token ${token}`,
+      'Content-Type':'application/json',
+      'Accept':'application/vnd.github+json',
+    },
+    body:JSON.stringify(body)
+  });
+  if(!r.ok) {
+    const e = await r.json().catch(()=>({}));
+    console.error('ghPut error',e);
+    toast('❌ 保存失败：'+(e.message||r.status));
+    return false;
+  }
+  const j = await r.json();
+  S.sha[path] = j.content.sha;
+  return true;
+}
+
+async function loadAll() {
+  const files = ['data/exercise.json','data/food.json','data/travel.json',
+                 'data/parenting.json','data/conversation.json','data/custom.json'];
+  const keys  = ['exercise','food','travel','parenting','conversation','custom'];
+  const cached = {};
+  for(let i=0;i<files.length;i++){
+    const k = keys[i], lk = 'cache_'+k;
+    try {
+      const d = await ghGet(files[i]);
+      S.data[k] = d;
+      localStorage.setItem(lk, JSON.stringify(d));
+    } catch(e) {
+      console.warn('load fail', files[i], e);
+      const c = localStorage.getItem(lk);
+      if(c) { S.data[k] = JSON.parse(c); toast('📦 离线缓存：'+keys[i]); }
+      else   { S.data[k] = keys[i]==='custom'?{tabs:[],records:[]}:{records:[]}; }
+    }
+  }
+  // custom tabs
+  S.customTabs = (S.data.custom?.tabs||[]);
+}
+
+// ─────────────────────────────────────────────
+// TAB BAR
+// ─────────────────────────────────────────────
+function renderTabBar() {
+  const bar = document.getElementById('tab-bar');
+  let html = BUILTIN_TABS.map(t=>`
+    <button class="tab-item${S.tab===t.id?' active':''}" data-tab="${t.id}">${t.label}</button>
+  `).join('');
+  S.customTabs.forEach(t=>{
+    html+=`<button class="tab-item${S.tab===t.id?' active':''}" data-tab="${t.id}">${escHtml(t.label)}</button>`;
+  });
+  html+=`<button class="tab-add" id="tab-add-btn" title="新增自定义标签">＋</button>`;
+  bar.innerHTML = html;
+  bar.querySelectorAll('.tab-item').forEach(btn=>{
+    btn.onclick=()=>{ S.tab=btn.dataset.tab; renderTabBar(); renderMain(); };
+  });
+  // scroll active into view
+  const active = bar.querySelector('.tab-item.active');
+  if(active) active.scrollIntoView({block:'nearest',inline:'center',behavior:'smooth'});
+  document.getElementById('tab-add-btn').onclick = openAddTabModal;
+}
+
+// ─────────────────────────────────────────────
+// MAIN RENDER ROUTER
+// ─────────────────────────────────────────────
+function renderMain() {
+  const el = document.getElementById('main');
+  switch(S.tab) {
+    case 'exercise':     el.innerHTML = renderExercise();     afterRenderExercise();     break;
+    case 'food':         el.innerHTML = renderFood();                                    break;
+    case 'travel':       el.innerHTML = renderTravel();                                  break;
+    case 'parenting':    el.innerHTML = renderParenting();                               break;
+    case 'conversation': el.innerHTML = renderConversation();                            break;
+    default:             el.innerHTML = renderCustom(S.tab);                             break;
+  }
+  // FAB
+  document.getElementById('fab').onclick = () => openAddModal(S.tab);
+}
+
+// ─────────────────────────────────────────────
+// ══════════ EXERCISE ══════════
+// ─────────────────────────────────────────────
+function calcExerciseStats() {
+  const ed = S.data.exercise?.exercise_days || {};
+  let jumpTotal=0, steps=0, run=0;
+  for(const v of Object.values(ed)){
+    if(v.jumped) jumpTotal++;
+    if(v.steps)  steps += v.steps;
+    if(v.run_km) run   += v.run_km;
+  }
+  // streak
+  const today = todaySH();
+  let streak=0, d=new Date(today+'T00:00:00+08:00');
+  while(true){
+    const ds = d.toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'}).slice(0,10);
+    if(ed[ds]?.jumped){ streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  return {jumpTotal, steps, run:Math.round(run*10)/10, streak};
+}
+
+function renderExercise() {
+  const stats = calcExerciseStats();
+  const today = todaySH();
+  const ed    = S.data.exercise?.exercise_days||{};
+  const todayData = ed[today]||{};
+  const jumped = !!todayData.jumped;
+
+  return `
+  <div class="card">
+    <div class="card-title">💪 运动统计</div>
+    <div class="exercise-stats">
+      <div class="stat-box">
+        <div class="stat-num">${stats.jumpTotal}</div>
+        <div class="stat-label">跳操总天数</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:var(--mint)">${stats.streak}</div>
+        <div class="stat-label">当前连续🔥</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" style="color:#8b7fd4">${stats.run}</div>
+        <div class="stat-label">累计跑步km</div>
+      </div>
+    </div>
+    <div class="exercise-stats" style="margin-bottom:0">
+      <div class="stat-box" style="grid-column:span 3;text-align:left;display:flex;align-items:center;justify-content:space-between">
+        <span><span style="font-size:22px;font-weight:800;color:var(--mint)">${(stats.steps/10000).toFixed(1)}万</span> <span style="font-size:12px;color:var(--text-light)">累计步数</span></span>
+        <button class="action-btn action-img" onclick="genExerciseCard()">📷 生成打卡图</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">今日打卡 · ${today}</div>
+    <button class="checkin-btn${jumped?' done':''}" id="jump-btn">
+      ${jumped ? '✅ 今日已打卡！' : '🏃 点击打卡跳操'}
+    </button>
+    <div class="record-row">
+      <input class="form-input" id="input-steps" type="number" placeholder="今日步数（如 8500）" value="${todayData.steps||''}">
+      <button class="btn btn-mint btn-sm" onclick="saveSteps()">记录</button>
+    </div>
+    <div class="record-row">
+      <input class="form-input" id="input-run" type="number" step="0.1" placeholder="今日跑步 km（如 3.5）" value="${todayData.run_km||''}">
+      <button class="btn btn-mint btn-sm" onclick="saveRun()">记录</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 2026年打卡热图</div>
+    <div class="heatmap-scroll">
+      <div class="heatmap-inner" id="heatmap-wrap"></div>
+    </div>
+  </div>`;
+}
+
+function afterRenderExercise() {
+  // checkin
+  document.getElementById('jump-btn').onclick = toggleJump;
+  // heatmap
+  buildHeatmap();
+}
+
+async function toggleJump() {
+  const today = todaySH();
+  const ed = S.data.exercise.exercise_days;
+  if(!ed[today]) ed[today]={jumped:false,steps:null,run_km:null};
+  ed[today].jumped = !ed[today].jumped;
+  recalcStats();
+  const ok = await ghPut('data/exercise.json', S.data.exercise);
+  if(ok){ toast(ed[today].jumped?'🎉 打卡成功！坚持就是胜利！':'已取消打卡'); renderMain(); }
+  else { ed[today].jumped = !ed[today].jumped; } // revert
+}
+
+async function saveSteps() {
+  const v = parseFloat(document.getElementById('input-steps').value);
+  if(!v||v<0){ toast('请输入有效步数'); return; }
+  const today = todaySH();
+  const ed = S.data.exercise.exercise_days;
+  if(!ed[today]) ed[today]={jumped:false,steps:null,run_km:null};
+  ed[today].steps = Math.round(v);
+  recalcStats();
+  const ok = await ghPut('data/exercise.json', S.data.exercise);
+  if(ok){ toast('👟 步数已记录！'); renderMain(); }
+}
+
+async function saveRun() {
+  const v = parseFloat(document.getElementById('input-run').value);
+  if(!v||v<0){ toast('请输入有效公里数'); return; }
+  const today = todaySH();
+  const ed = S.data.exercise.exercise_days;
+  if(!ed[today]) ed[today]={jumped:false,steps:null,run_km:null};
+  ed[today].run_km = Math.round(v*10)/10;
+  recalcStats();
+  const ok = await ghPut('data/exercise.json', S.data.exercise);
+  if(ok){ toast('🏃 跑步已记录！'); renderMain(); }
+}
+
+function recalcStats() {
+  const ed = S.data.exercise?.exercise_days||{};
+  let jumpTotal=0,steps=0,run=0;
+  for(const v of Object.values(ed)){
+    if(v.jumped) jumpTotal++;
+    if(v.steps) steps+=v.steps;
+    if(v.run_km) run+=v.run_km;
+  }
+  const today=todaySH();
+  let streak=0,d=new Date(today+'T00:00:00+08:00');
+  while(true){
+    const ds=d.toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'}).slice(0,10);
+    if(ed[ds]?.jumped){streak++;d.setDate(d.getDate()-1);}else break;
+  }
+  if(!S.data.exercise.stats) S.data.exercise.stats={};
+  Object.assign(S.data.exercise.stats,{
+    total_jump_days:jumpTotal, current_streak:streak,
+    total_steps:steps, total_run_km:Math.round(run*10)/10
+  });
+}
+
+function buildHeatmap() {
+  const wrap = document.getElementById('heatmap-wrap');
+  if(!wrap) return;
+  const ed = S.data.exercise?.exercise_days||{};
+  const today = todaySH();
+  // 2026-01-01 ~ today
+  const year = 2026;
+  const start = new Date(`${year}-01-01T00:00:00+08:00`);
+  const end   = new Date(today+'T00:00:00+08:00');
+
+  // pad to Sunday=0
+  const startDow = start.getDay(); // 0=Sun
+  const totalDays = Math.floor((end-start)/86400000)+1;
+  const totalCols = Math.ceil((startDow+totalDays)/7);
+
+  // month labels
+  let monthsHtml = '';
+  const monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  let lastMonth = -1, colStart = 0;
+  const colWidths = []; // (col index -> label)
+  for(let col=0;col<totalCols;col++){
+    // first day of this col
+    const cellIdx = col*7 - startDow;
+    const cellDate = new Date(start); cellDate.setDate(cellDate.getDate()+cellIdx);
+    if(cellDate > end) break;
+    const m = cellDate.getMonth();
+    if(m !== lastMonth){
+      colWidths.push({col, label:monthNames[m]});
+      lastMonth = m;
+    }
+  }
+  // build month labels row
+  let mlHtml = '<div class="heatmap-months" style="display:flex;align-items:flex-end;">';
+  for(let i=0;i<colWidths.length;i++){
+    const spanCols = i+1<colWidths.length ? colWidths[i+1].col-colWidths[i].col : totalCols-colWidths[i].col;
+    mlHtml+=`<span style="display:inline-block;width:${spanCols*13}px;font-size:10px;color:var(--gray)">${colWidths[i].label}</span>`;
+  }
+  mlHtml+='</div>';
+
+  // cells
+  let cellsHtml = '<div class="heatmap-grid">';
+  // empty pads for start dow
+  for(let i=0;i<startDow;i++){
+    cellsHtml+=`<div class="hm-cell" style="background:transparent"></div>`;
+  }
+  let d = new Date(start);
+  while(d<=end){
+    const ds = d.toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'}).slice(0,10);
+    const isToday = ds===today;
+    const jumped  = !!(ed[ds]?.jumped);
+    cellsHtml+=`<div class="hm-cell${jumped?' on':''}${isToday?' today-cell':''}" title="${ds}${jumped?' ✅':''}"></div>`;
+    d.setDate(d.getDate()+1);
+  }
+  cellsHtml+='</div>';
+
+  wrap.innerHTML = mlHtml+cellsHtml;
+}
+
+// ─────────────────────────────────────────────
+// ══════════ FOOD ══════════
+// ─────────────────────────────────────────────
+function renderFood() {
+  const recs = S.data.food?.records||[];
+  if(!recs.length) return `
+    <div class="empty">
+      <div class="empty-icon">🍳</div>
+      <div class="empty-text">还没有美食记录，记录第一道菜吧～</div>
+    </div>`;
+  const sorted = [...recs].sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="food-grid">${sorted.map(r=>`
+    <div class="food-card">
+      ${r.image
+        ? `<img class="food-img" src="${r.image}" alt="${escHtml(r.name)}" loading="lazy">`
+        : `<div class="food-img-placeholder">🍽️</div>`}
+      <div class="food-body">
+        <div class="food-name">${escHtml(r.name)}</div>
+        <div class="food-date">${fmtDate(r.date)}</div>
+        <div class="food-desc">${escHtml(r.desc||'')}</div>
+      </div>
+      <div class="food-actions">
+        <button class="action-btn action-img" onclick='genCard("food",${JSON.stringify(r)})'>📷</button>
+        <button class="action-btn action-del" onclick="delRecord('food','${r.id}')">删除</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─────────────────────────────────────────────
+// ══════════ TRAVEL ══════════
+// ─────────────────────────────────────────────
+function renderTravel() {
+  const recs = S.data.travel?.records||[];
+  if(!recs.length) return `
+    <div class="empty">
+      <div class="empty-icon">🗺️</div>
+      <div class="empty-text">还没有出游记录，记录美好旅程吧～</div>
+    </div>`;
+  const sorted = [...recs].sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="timeline">${sorted.map(r=>`
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="travel-card">
+        ${r.image
+          ? `<img class="travel-img" src="${r.image}" alt="${escHtml(r.place)}" loading="lazy">`
+          : `<div class="travel-img-placeholder">🌍</div>`}
+        <div class="travel-body">
+          <div class="travel-place">📍 ${escHtml(r.place)}</div>
+          <div class="travel-date">${fmtDate(r.date)}</div>
+          <div class="travel-note">${escHtml(r.note||'')}</div>
+        </div>
+        <div class="travel-actions">
+          <button class="action-btn action-img" onclick='genCard("travel",${JSON.stringify(r)})'>📷 生成图片</button>
+          <button class="action-btn action-del" onclick="delRecord('travel','${r.id}')">删除</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─────────────────────────────────────────────
+// ══════════ PARENTING ══════════
+// ─────────────────────────────────────────────
+function renderParenting() {
+  const recs = S.data.parenting?.records||[];
+  if(!recs.length) return `
+    <div class="empty">
+      <div class="empty-icon">📚</div>
+      <div class="empty-text">记录育儿路上的智慧与感悟～</div>
+    </div>`;
+  const sorted = [...recs].sort((a,b)=>b.date.localeCompare(a.date));
+  const srcMap = {video:'视频',book:'书籍',other:'其他'};
+  return `<div class="parenting-list">${sorted.map(r=>`
+    <div class="pk-card">
+      <span class="pk-source ${r.source==='book'?'book':r.source==='other'?'other':''}">${srcMap[r.source]||'视频'}</span>
+      <div class="pk-title">${escHtml(r.title)}</div>
+      <div class="pk-content">${escHtml(r.content)}</div>
+      <div class="pk-footer">
+        <span class="pk-date">${fmtDate(r.date)}</span>
+        <div class="pk-actions">
+          <button class="action-btn action-img" onclick='genCard("parenting",${JSON.stringify(r)})'>📷 生成图片</button>
+          <button class="action-btn action-del" onclick="delRecord('parenting','${r.id}')">删除</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─────────────────────────────────────────────
+// ══════════ CONVERSATION ══════════
+// ─────────────────────────────────────────────
+function renderConversation() {
+  const recs = S.data.conversation?.records||[];
+  if(!recs.length) return `
+    <div class="empty">
+      <div class="empty-icon">💬</div>
+      <div class="empty-text">记录孩子说的那些可爱的话～</div>
+    </div>`;
+  const sorted = [...recs].sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="conv-list">${sorted.map(r=>`
+    <div>
+      <div class="conv-date">${fmtDate(r.date)}</div>
+      <div class="bubble-wrap">
+        <div class="bubble-row bubble-child">
+          <div class="bubble-avatar avatar-child">👧</div>
+          <div class="bubble-text">${escHtml(r.words)}</div>
+        </div>
+        ${r.feeling?`<div class="bubble-row bubble-me">
+          <div class="bubble-avatar avatar-me">💝</div>
+          <div class="bubble-text">${escHtml(r.feeling)}</div>
+        </div>`:''}
+      </div>
+      <div class="conv-actions">
+        <button class="action-btn action-img" onclick='genCard("conversation",${JSON.stringify(r)})'>📷 生成图片</button>
+        <button class="action-btn action-del" onclick="delRecord('conversation','${r.id}')">删除</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─────────────────────────────────────────────
+// ══════════ CUSTOM ══════════
+// ─────────────────────────────────────────────
+function renderCustom(tabId) {
+  const recs = (S.data.custom?.records||[]).filter(r=>r.tabId===tabId);
+  const tabInfo = S.customTabs.find(t=>t.id===tabId)||{label:'自定义'};
+  const menuHtml = `<div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+    <button class="btn btn-sm btn-ghost" onclick="renameCustomTab('${tabId}')">✏️ 重命名</button>
+    <button class="btn btn-sm" style="background:var(--coral-light);color:var(--coral)" onclick="deleteCustomTab('${tabId}')">🗑️ 删除此标签</button>
+  </div>`;
+  if(!recs.length) return menuHtml+`
+    <div class="empty">
+      <div class="empty-icon">✨</div>
+      <div class="empty-text">还没有记录，点击 ＋ 添加吧～</div>
+    </div>`;
+  const sorted = [...recs].sort((a,b)=>b.date.localeCompare(a.date));
+  return menuHtml+`<div class="custom-list">${sorted.map(r=>`
+    <div class="custom-card">
+      <div class="custom-card-title">${escHtml(r.title||'')}</div>
+      <div class="custom-card-content">${escHtml(r.content||'')}</div>
+      <div class="custom-card-footer">
+        <span class="custom-card-date">${fmtDate(r.date)}</span>
+        <div style="display:flex;gap:6px">
+          <button class="action-btn action-img" onclick='genCard("custom",${JSON.stringify(r)})'>📷 生成图片</button>
+          <button class="action-btn action-del" onclick="delCustomRecord('${r.id}')">删除</button>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─────────────────────────────────────────────
+// ADD / EDIT MODALS
+// ─────────────────────────────────────────────
+function openAddModal(tab) {
+  switch(tab){
+    case 'exercise':     openAddExerciseNote(); break;
+    case 'food':         openAddFood();         break;
+    case 'travel':       openAddTravel();       break;
+    case 'parenting':    openAddParenting();    break;
+    case 'conversation': openAddConversation(); break;
+    default:             openAddCustomRecord(tab); break;
+  }
+}
+
+// 运动：补录历史
+function openAddExerciseNote() {
+  openModal('📝 补录运动数据', `
+    <div class="form-group">
+      <label class="form-label">日期</label>
+      <input class="form-input" type="date" id="ex-date" value="${todaySH()}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">是否打卡跳操</label>
+      <select class="form-select" id="ex-jumped">
+        <option value="1">✅ 已打卡</option>
+        <option value="0">❌ 未打卡</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">步数</label>
+      <input class="form-input" type="number" id="ex-steps" placeholder="步数（可选）">
+    </div>
+    <div class="form-group">
+      <label class="form-label">跑步 km</label>
+      <input class="form-input" type="number" step="0.1" id="ex-run" placeholder="跑步公里（可选）">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveExerciseNote()">💾 保存</button>
+  `);
+}
+
+async function saveExerciseNote() {
+  const date   = document.getElementById('ex-date').value;
+  const jumped = document.getElementById('ex-jumped').value==='1';
+  const steps  = parseFloat(document.getElementById('ex-steps').value)||null;
+  const run    = parseFloat(document.getElementById('ex-run').value)||null;
+  if(!date){ toast('请选择日期'); return; }
+  const ed = S.data.exercise.exercise_days;
+  if(!ed[date]) ed[date]={jumped:false,steps:null,run_km:null};
+  ed[date].jumped = jumped;
+  if(steps) ed[date].steps = Math.round(steps);
+  if(run)   ed[date].run_km = Math.round(run*10)/10;
+  recalcStats();
+  const ok = await ghPut('data/exercise.json', S.data.exercise);
+  if(ok){ toast('✅ 运动数据已保存'); closeModal(); renderMain(); }
+}
+
+function openAddFood() {
+  openModal('🍳 新增美食', `
+    <div class="form-group">
+      <label class="form-label">菜名 *</label>
+      <input class="form-input" id="f-name" placeholder="如：番茄炒蛋">
+    </div>
+    <div class="form-group">
+      <label class="form-label">日期</label>
+      <input class="form-input" type="date" id="f-date" value="${todaySH()}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">简短描述</label>
+      <textarea class="form-textarea" id="f-desc" placeholder="味道、做法备注..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">图片（可选，建议 < 1MB）</label>
+      <div class="img-upload" id="f-img-wrap" onclick="document.getElementById('f-img-input').click()">
+        <div>📷 点击上传图片</div>
+        <div class="img-hint">支持 jpg/png，建议压缩到 500KB 以内</div>
+        <img id="f-img-preview" class="img-preview-thumb" style="display:none">
+      </div>
+      <input type="file" id="f-img-input" accept="image/*" style="display:none" onchange="previewImg(this,'f-img-preview')">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveFood()">💾 保存</button>
+  `);
+}
+
+async function saveFood() {
+  const name = document.getElementById('f-name').value.trim();
+  const date = document.getElementById('f-date').value;
+  const desc = document.getElementById('f-desc').value.trim();
+  const img  = document.getElementById('f-img-preview').src||null;
+  if(!name){ toast('请输入菜名'); return; }
+  const r = {id:uid(),name,date,desc,image:img&&img.startsWith('data:')?img:null};
+  if(!S.data.food.records) S.data.food.records=[];
+  S.data.food.records.push(r);
+  const ok = await ghPut('data/food.json', S.data.food);
+  if(ok){ toast('🍳 已记录！'); closeModal(); renderMain(); }
+}
+
+function openAddTravel() {
+  openModal('🗺️ 新增出游', `
+    <div class="form-group">
+      <label class="form-label">地点 *</label>
+      <input class="form-input" id="tv-place" placeholder="如：深圳欢乐谷">
+    </div>
+    <div class="form-group">
+      <label class="form-label">日期</label>
+      <input class="form-input" type="date" id="tv-date" value="${todaySH()}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">一句话感受</label>
+      <textarea class="form-textarea" id="tv-note" placeholder="今天的感受..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">图片（可选）</label>
+      <div class="img-upload" onclick="document.getElementById('tv-img-input').click()">
+        <div>📷 点击上传图片</div>
+        <div class="img-hint">建议压缩到 500KB 以内</div>
+        <img id="tv-img-preview" class="img-preview-thumb" style="display:none">
+      </div>
+      <input type="file" id="tv-img-input" accept="image/*" style="display:none" onchange="previewImg(this,'tv-img-preview')">
+    </div>
+    <button class="btn btn-mint btn-full" onclick="saveTravel()">💾 保存</button>
+  `);
+}
+
+async function saveTravel() {
+  const place = document.getElementById('tv-place').value.trim();
+  const date  = document.getElementById('tv-date').value;
+  const note  = document.getElementById('tv-note').value.trim();
+  const img   = document.getElementById('tv-img-preview').src||null;
+  if(!place){ toast('请输入地点'); return; }
+  const r = {id:uid(),place,date,note,image:img&&img.startsWith('data:')?img:null};
+  if(!S.data.travel.records) S.data.travel.records=[];
+  S.data.travel.records.push(r);
+  const ok = await ghPut('data/travel.json', S.data.travel);
+  if(ok){ toast('🗺️ 出游记录已保存！'); closeModal(); renderMain(); }
+}
+
+function openAddParenting() {
+  openModal('📚 新增育儿心得', `
+    <div class="form-group">
+      <label class="form-label">来源</label>
+      <select class="form-select" id="pk-src">
+        <option value="video">📹 视频</option>
+        <option value="book">📖 书</option>
+        <option value="other">✨ 其他</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">标题 *</label>
+      <input class="form-input" id="pk-title" placeholder="文章/视频标题或心得标题">
+    </div>
+    <div class="form-group">
+      <label class="form-label">心得内容 *</label>
+      <textarea class="form-textarea" id="pk-content" style="min-height:120px" placeholder="记录下你的感悟..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">日期</label>
+      <input class="form-input" type="date" id="pk-date" value="${todaySH()}">
+    </div>
+    <button class="btn btn-yellow btn-full" onclick="saveParenting()">💾 保存</button>
+  `);
+}
+
+async function saveParenting() {
+  const source  = document.getElementById('pk-src').value;
+  const title   = document.getElementById('pk-title').value.trim();
+  const content = document.getElementById('pk-content').value.trim();
+  const date    = document.getElementById('pk-date').value;
+  if(!title||!content){ toast('请填写标题和内容'); return; }
+  const r = {id:uid(),source,title,content,date};
+  if(!S.data.parenting.records) S.data.parenting.records=[];
+  S.data.parenting.records.push(r);
+  const ok = await ghPut('data/parenting.json', S.data.parenting);
+  if(ok){ toast('📚 心得已保存！'); closeModal(); renderMain(); }
+}
+
+function openAddConversation() {
+  openModal('💬 记录亲子对话', `
+    <div class="form-group">
+      <label class="form-label">孩子说的话 *</label>
+      <textarea class="form-textarea" id="cv-words" placeholder="宝贝说了什么～"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">你的感受（可选）</label>
+      <textarea class="form-textarea" id="cv-feeling" placeholder="听到后你的感受..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">日期</label>
+      <input class="form-input" type="date" id="cv-date" value="${todaySH()}">
+    </div>
+    <button class="btn btn-full" style="background:linear-gradient(135deg,var(--purple),#b5c8f9);color:white;box-shadow:0 3px 12px rgba(199,206,234,.5)" onclick="saveConversation()">💾 保存</button>
+  `);
+}
+
+async function saveConversation() {
+  const words   = document.getElementById('cv-words').value.trim();
+  const feeling = document.getElementById('cv-feeling').value.trim();
+  const date    = document.getElementById('cv-date').value;
+  if(!words){ toast('请输入孩子说的话'); return; }
+  const r = {id:uid(),words,feeling,date};
+  if(!S.data.conversation.records) S.data.conversation.records=[];
+  S.data.conversation.records.push(r);
+  const ok = await ghPut('data/conversation.json', S.data.conversation);
+  if(ok){ toast('💬 对话已记录！'); closeModal(); renderMain(); }
+}
+
+function openAddCustomRecord(tabId) {
+  const tabInfo = S.customTabs.find(t=>t.id===tabId)||{label:'记录'};
+  openModal(`✨ 新增「${tabInfo.label}」`, `
+    <div class="form-group">
+      <label class="form-label">标题（可选）</label>
+      <input class="form-input" id="cu-title" placeholder="标题...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">内容 *</label>
+      <textarea class="form-textarea" id="cu-content" style="min-height:100px" placeholder="记录内容..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">日期</label>
+      <input class="form-input" type="date" id="cu-date" value="${todaySH()}">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveCustomRecord('${tabId}')">💾 保存</button>
+  `);
+}
+
+async function saveCustomRecord(tabId) {
+  const title   = document.getElementById('cu-title').value.trim();
+  const content = document.getElementById('cu-content').value.trim();
+  const date    = document.getElementById('cu-date').value;
+  if(!content){ toast('请填写内容'); return; }
+  const r = {id:uid(),tabId,title,content,date};
+  if(!S.data.custom.records) S.data.custom.records=[];
+  S.data.custom.records.push(r);
+  const ok = await ghPut('data/custom.json', S.data.custom);
+  if(ok){ toast('✅ 已记录！'); closeModal(); renderMain(); }
+}
+
+// ─────────────────────────────────────────────
+// DELETE RECORDS
+// ─────────────────────────────────────────────
+async function delRecord(type, id) {
+  if(!confirm('确认删除这条记录？')) return;
+  const d = S.data[type];
+  d.records = d.records.filter(r=>r.id!==id);
+  const ok = await ghPut(`data/${type}.json`, d);
+  if(ok){ toast('已删除'); renderMain(); }
+}
+async function delCustomRecord(id) {
+  if(!confirm('确认删除？')) return;
+  S.data.custom.records = S.data.custom.records.filter(r=>r.id!==id);
+  const ok = await ghPut('data/custom.json', S.data.custom);
+  if(ok){ toast('已删除'); renderMain(); }
+}
+
+// ─────────────────────────────────────────────
+// CUSTOM TAB MANAGEMENT
+// ─────────────────────────────────────────────
+function openAddTabModal() {
+  openModal('➕ 新增标签', `
+    <div class="form-group">
+      <label class="form-label">标签名称 *</label>
+      <input class="form-input" id="new-tab-name" placeholder="如：读书笔记、观影日记...">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveNewTab()">创建</button>
+  `);
+}
+
+async function saveNewTab() {
+  const name = document.getElementById('new-tab-name').value.trim();
+  if(!name){ toast('请输入标签名'); return; }
+  const t = {id:'tab_'+uid(), label:name};
+  S.customTabs.push(t);
+  if(!S.data.custom.tabs) S.data.custom.tabs=[];
+  S.data.custom.tabs.push(t);
+  const ok = await ghPut('data/custom.json', S.data.custom);
+  if(ok){ toast('✅ 标签已创建'); closeModal(); S.tab=t.id; renderTabBar(); renderMain(); }
+  else { S.customTabs.pop(); S.data.custom.tabs.pop(); }
+}
+
+function renameCustomTab(tabId) {
+  const t = S.customTabs.find(t=>t.id===tabId);
+  openModal('✏️ 重命名标签', `
+    <div class="form-group">
+      <label class="form-label">新名称</label>
+      <input class="form-input" id="rename-input" value="${escHtml(t?.label||'')}">
+    </div>
+    <button class="btn btn-primary btn-full" onclick="doRenameTab('${tabId}')">保存</button>
+  `);
+}
+async function doRenameTab(tabId) {
+  const name = document.getElementById('rename-input').value.trim();
+  if(!name){ toast('请输入名称'); return; }
+  const t = S.customTabs.find(t=>t.id===tabId);
+  if(t) t.label=name;
+  const dt = S.data.custom.tabs?.find(t=>t.id===tabId);
+  if(dt) dt.label=name;
+  const ok = await ghPut('data/custom.json', S.data.custom);
+  if(ok){ toast('已重命名'); closeModal(); renderTabBar(); renderMain(); }
+}
+async function deleteCustomTab(tabId) {
+  if(!confirm('删除此标签会同时删除其中所有记录，确认？')) return;
+  S.customTabs = S.customTabs.filter(t=>t.id!==tabId);
+  S.data.custom.tabs    = (S.data.custom.tabs||[]).filter(t=>t.id!==tabId);
+  S.data.custom.records = (S.data.custom.records||[]).filter(r=>r.tabId!==tabId);
+  const ok = await ghPut('data/custom.json', S.data.custom);
+  if(ok){ toast('已删除标签'); S.tab='exercise'; renderTabBar(); renderMain(); }
+}
+
+// ─────────────────────────────────────────────
+// IMAGE UPLOAD HELPER
+// ─────────────────────────────────────────────
+function previewImg(input, previewId) {
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 2*1024*1024){ toast('⚠️ 图片太大（>2MB），请压缩后上传'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById(previewId);
+    img.src = e.target.result;
+    img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────
+function openSettings() {
+  const tok = getToken();
+  document.getElementById('set-body').innerHTML = `
+    <div class="set-section">
+      <div class="set-label">GitHub Token</div>
+      <div class="set-row">
+        <span>${tok
+          ? `<span class="token-badge">已配置 ****${tok.slice(-4)}</span>`
+          : '<span style="color:var(--coral)">⚠️ 未配置，无法保存数据</span>'}</span>
+        <button class="btn btn-sm btn-ghost" onclick="editToken()">修改</button>
+      </div>
+      <div style="font-size:13px;color:var(--text-light);margin-top:8px;line-height:1.6">
+        Token 需要 <b>repo</b> 权限。获取方式：<br>
+        GitHub → Settings → Developer settings → Personal access tokens → Generate new token (classic)
+      </div>
+    </div>
+    <div class="set-section">
+      <div class="set-label">仓库信息</div>
+      <div class="set-row">
+        <span>仓库</span>
+        <span class="set-value">${OWNER}/${REPO}</span>
+      </div>
+      <div class="set-row">
+        <span>分支</span>
+        <span class="set-value">${BRANCH}</span>
+      </div>
+    </div>
+    <div class="set-section">
+      <div class="set-label">数据操作</div>
+      <button class="btn btn-mint btn-full" style="margin-bottom:8px" onclick="reloadData()">🔄 重新加载数据</button>
+      <button class="btn btn-ghost btn-full" onclick="clearLocalCache()">🗑️ 清除本地缓存</button>
+    </div>
+    <div style="text-align:center;font-size:12px;color:var(--gray);margin-top:20px;line-height:1.6">
+      她的生活 🌸<br>
+      Made with ❤️ for Sherry
+    </div>
+  `;
+  document.getElementById('set-ov').classList.add('open');
+}
+
+function editToken() {
+  const cur = getToken();
+  openModal('🔑 设置 GitHub Token', `
+    <div class="form-group">
+      <label class="form-label">Personal Access Token（需要 repo 权限）</label>
+      <input class="form-input" type="password" id="tok-input" value="${escHtml(cur)}" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+    <div style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.6">
+      ⚠️ Token 仅存储在本机 localStorage，不会上传到任何服务器。
+    </div>
+    <button class="btn btn-primary btn-full" onclick="saveToken()">保存</button>
+  `);
+}
+function saveToken() {
+  const t = document.getElementById('tok-input').value.trim();
+  if(!t){ toast('请输入 Token'); return; }
+  setToken(t);
+  toast('✅ Token 已保存');
+  closeModal();
+  openSettings();
+}
+
+async function reloadData() {
+  document.getElementById('set-ov').classList.remove('open');
+  document.getElementById('main').innerHTML='<div class="loading"><div class="spinner"></div>重新加载中…</div>';
+  await loadAll();
+  renderTabBar();
+  renderMain();
+  toast('✅ 数据已刷新');
+}
+
+function clearLocalCache() {
+  ['exercise','food','travel','parenting','conversation','custom'].forEach(k=>localStorage.removeItem('cache_'+k));
+  toast('本地缓存已清除');
+}
+
+// ─────────────────────────────────────────────
+// ══════════════════════════════════════════════
+//   ONE-CLICK IMAGE GENERATION (CANVAS)
+// ══════════════════════════════════════════════
+// ─────────────────────────────────────────────
+const CANVAS_W = 1080;
+const CANVAS_H = 1440;
+
+// 加载图片为 ImageBitmap，失败返回 null
+async function loadImg(src) {
+  if(!src) return null;
+  try {
+    const res = await fetch(src);
+    const blob = await res.blob();
+    return await createImageBitmap(blob);
+  } catch(e) {
+    try {
+      return await new Promise((res,rej)=>{
+        const img=new Image(); img.crossOrigin='anonymous';
+        img.onload=()=>res(img); img.onerror=rej; img.src=src;
+      });
+    } catch(e2) { return null; }
+  }
+}
+
+// 绘制圆角矩形路径
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+  ctx.lineTo(x+r, y+h);
+  ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+  ctx.lineTo(x, y+r);
+  ctx.quadraticCurveTo(x, y, x+r, y);
+  ctx.closePath();
+}
+
+// 自动换行 fillText
+function wrapText(ctx, text, x, y, maxW, lineH, maxLines=99) {
+  const chars = Array.from(text||'');
+  let line='', lines=[], count=0;
+  for(const ch of chars){
+    const test = line+ch;
+    if(ctx.measureText(test).width>maxW && line){
+      lines.push(line); line=ch; count++;
+      if(count>=maxLines){ lines[lines.length-1]+='…'; break; }
+    } else { line=test; }
+  }
+  if(line && count<maxLines) lines.push(line);
+  lines.forEach((l,i)=>ctx.fillText(l, x, y+i*lineH));
+  return lines.length;
+}
+
+// 通用卡片绘制框架
+async function drawCardBase(ctx, theme, headerIcon, headerText) {
+  // 背景渐变
+  const [c1, c2, c3] = theme.bg;
+  const grad = ctx.createLinearGradient(0,0,CANVAS_W,CANVAS_H);
+  grad.addColorStop(0,   c1);
+  grad.addColorStop(0.5, c2);
+  grad.addColorStop(1,   c3||c2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+
+  // 装饰圆
+  ctx.save();
+  ctx.globalAlpha = 0.15;
+  ctx.fillStyle = 'white';
+  ctx.beginPath(); ctx.arc(CANVAS_W*0.85, CANVAS_H*0.08, 220, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(CANVAS_W*0.1,  CANVAS_H*0.92, 180, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(CANVAS_W*0.5,  CANVAS_H*0.55, 300, 0, Math.PI*2); ctx.fill();
+  ctx.restore();
+
+  // 顶部 logo 区域
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  roundRect(ctx, 60, 60, CANVAS_W-120, 120, 30);
+  ctx.fill();
+  ctx.restore();
+
+  // Logo 文字
+  ctx.save();
+  ctx.font = 'bold 48px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+  ctx.fillStyle = 'white';
+  ctx.textAlign = 'left';
+  ctx.shadowColor = 'rgba(0,0,0,0.15)';
+  ctx.shadowBlur = 8;
+  ctx.fillText('她的生活 🌸', 100, 138);
+  ctx.restore();
+
+  // 板块图标徽章
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  roundRect(ctx, CANVAS_W-200, 76, 140, 88, 24);
+  ctx.fill();
+  ctx.font = '40px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(headerIcon, CANVAS_W-165, 132);
+  ctx.font = 'bold 26px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+  ctx.fillStyle = theme.accent;
+  ctx.fillText(headerText, CANVAS_W-115, 132);
+  ctx.restore();
+}
+
+// 底部水印
+function drawFooter(ctx, dateStr) {
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  roundRect(ctx, 60, CANVAS_H-110, CANVAS_W-120, 70, 20);
+  ctx.fill();
+  ctx.font = '32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.textAlign = 'left';
+  ctx.fillText(dateStr || todaySH(), 100, CANVAS_H-65);
+  ctx.textAlign = 'right';
+  ctx.font = 'bold 28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+  ctx.fillText('她的生活 · 记录每一天 🌸', CANVAS_W-100, CANVAS_H-65);
+  ctx.restore();
+}
+
+// 显示预览弹窗
+function showCanvasPreview(canvas, filename) {
+  const previewCanvas = document.getElementById('preview-canvas');
+  const ctx2 = previewCanvas.getContext('2d');
+  previewCanvas.width  = canvas.width;
+  previewCanvas.height = canvas.height;
+  ctx2.drawImage(canvas,0,0);
+
+  document.getElementById('preview-overlay').classList.add('open');
+
+  document.getElementById('preview-dl').onclick = ()=>{
+    const a = document.createElement('a');
+    a.download = filename||'sherry-life.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  };
+}
+
+// ── 运动打卡综合卡片 ──
+function genExerciseCard() {
+  const canvas = document.createElement('canvas');
+  canvas.width  = CANVAS_W;
+  canvas.height = CANVAS_H;
+  const ctx = canvas.getContext('2d');
+  const theme = TAB_THEME.exercise;
+  const today = todaySH();
+  const ed    = S.data.exercise?.exercise_days||{};
+  const todayData = ed[today]||{};
+  const stats = calcExerciseStats();
+
+  (async()=>{
+    await drawCardBase(ctx, theme, '💪', '运动');
+
+    // 主卡片白色区域
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.shadowColor = 'rgba(0,0,0,0.1)';
+    ctx.shadowBlur = 30;
+    roundRect(ctx, 60, 220, CANVAS_W-120, 680, 40);
+    ctx.fill();
+    ctx.restore();
+
+    // 标题
+    ctx.save();
+    ctx.font = 'bold 52px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    ctx.fillStyle = theme.accent;
+    ctx.textAlign = 'center';
+    ctx.fillText('今日运动打卡', CANVAS_W/2, 300);
+
+    // 日期
+    ctx.font = '34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    ctx.fillStyle = '#888';
+    ctx.fillText(fmtDate(today), CANVAS_W/2, 360);
+    ctx.restore();
+
+    // 打卡状态大图标
+    ctx.save();
+    ctx.font = '120px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(todayData.jumped?'✅':'🏃', CANVAS_W/2, 520);
+    ctx.font = 'bold 44px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    ctx.fillStyle = todayData.jumped?'#4CAF50':'#888';
+    ctx.fillText(todayData.jumped?'跳操打卡 · 完成！':'跳操今日未打卡', CANVAS_W/2, 590);
+    ctx.restore();
+
+    // 分割线
+    ctx.save();
+    ctx.strokeStyle = '#f0f0f0';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(120,630); ctx.lineTo(CANVAS_W-120,630); ctx.stroke();
+    ctx.restore();
+
+    // 三格数据
+    const items = [
+      {icon:'👟', label:'今日步数', val: todayData.steps?todayData.steps.toLocaleString():'—', unit:'步'},
+      {icon:'🏃', label:'今日跑步', val: todayData.run_km||'—', unit:'km'},
+      {icon:'🔥', label:'连续打卡', val: stats.streak, unit:'天'},
+    ];
+    items.forEach((item,i)=>{
+      const x = 130 + i*290;
+      ctx.save();
+      ctx.fillStyle = i===0?'#FFF3E0':i===1?'#E8F5E9':'#FCE4EC';
+      roundRect(ctx, x, 660, 240, 180, 20);
+      ctx.fill();
+      ctx.font = '40px serif'; ctx.textAlign='center';
+      ctx.fillText(item.icon, x+120, 720);
+      ctx.font = 'bold 42px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle = theme.accent;
+      ctx.fillText(String(item.val), x+120, 790);
+      ctx.font = '24px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle = '#888';
+      ctx.fillText(item.unit+' · '+item.label, x+120, 825);
+      ctx.restore();
+    });
+
+    // 年度统计小提示
+    ctx.save();
+    ctx.font = '30px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    ctx.fillStyle = '#aaa';
+    ctx.textAlign = 'center';
+    ctx.fillText(`今年累计跳操 ${stats.jumpTotal} 天 · 总步数 ${(stats.steps/10000).toFixed(1)} 万步`, CANVAS_W/2, 895);
+    ctx.restore();
+
+    // 热力图（简版 mini）
+    drawMiniHeatmap(ctx, ed, 100, 940, CANVAS_W-200, 150);
+
+    drawFooter(ctx, fmtDate(today));
+    showCanvasPreview(canvas, `运动打卡-${today}.png`);
+    toast('📷 图片已生成，长按保存！');
+  })();
+}
+
+// mini 热力图（内嵌在 canvas 中）
+function drawMiniHeatmap(ctx, ed, x, y, w, h) {
+  const year=2026;
+  const start=new Date(`${year}-01-01T00:00:00+08:00`);
+  const today=todaySH();
+  const end=new Date(today+'T00:00:00+08:00');
+  const startDow=start.getDay();
+  const totalDays=Math.floor((end-start)/86400000)+1;
+  const totalCols=Math.ceil((startDow+totalDays)/7);
+  const cellSize=Math.min(Math.floor(w/totalCols)-2, Math.floor(h/7)-2);
+  const gapX = cellSize+2, gapY = cellSize+2;
+
+  ctx.save();
+  ctx.font = '22px -apple-system,PingFang SC,sans-serif';
+  ctx.fillStyle='#aaa'; ctx.textAlign='left';
+  ctx.fillText('2026 打卡热图', x, y-10);
+
+  for(let col=0;col<totalCols;col++){
+    for(let row=0;row<7;row++){
+      const idx=col*7+row-startDow;
+      if(idx<0||idx>=totalDays) continue;
+      const d=new Date(start); d.setDate(d.getDate()+idx);
+      const ds=d.toLocaleString('sv-SE',{timeZone:'Asia/Shanghai'}).slice(0,10);
+      const jumped=!!(ed[ds]?.jumped);
+      ctx.fillStyle = jumped?'#FF6B6B':'rgba(0,0,0,0.08)';
+      roundRect(ctx, x+col*gapX, y+row*gapY, cellSize, cellSize, 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+// ── 通用记录卡片 ──
+function genCard(type, record) {
+  const theme = TAB_THEME[type]||TAB_THEME.custom;
+  const canvas = document.createElement('canvas');
+  canvas.width  = CANVAS_W;
+  canvas.height = CANVAS_H;
+  const ctx = canvas.getContext('2d');
+
+  (async()=>{
+    // 各板块 header 标签
+    const headers = {
+      food:        {icon:'🍳', text:'美食'},
+      travel:      {icon:'🗺️', text:'出游'},
+      parenting:   {icon:'📚', text:'育儿'},
+      conversation:{icon:'💬', text:'对话'},
+      custom:      {icon:'✨', text:'记录'},
+    };
+    const hdr = headers[type]||{icon:'✨',text:'记录'};
+    await drawCardBase(ctx, theme, hdr.icon, hdr.text);
+
+    let yOff = 220; // 卡片内容起始 Y
+
+    // 如有图片，上方展示
+    let hasImg = false;
+    if(record.image) {
+      const imgBm = await loadImg(record.image);
+      if(imgBm){
+        hasImg = true;
+        // 图片区域（圆角裁剪）
+        const iw=CANVAS_W-120, ih=460;
+        ctx.save();
+        roundRect(ctx, 60, yOff, iw, ih, 30);
+        ctx.clip();
+        // cover fit
+        const ir = imgBm.width/imgBm.height;
+        const fr = iw/ih;
+        let sx=0,sy=0,sw=imgBm.width,sh=imgBm.height;
+        if(ir>fr){ sw=imgBm.height*fr; sx=(imgBm.width-sw)/2; }
+        else      { sh=imgBm.width/fr; sy=(imgBm.height-sh)/2; }
+        ctx.drawImage(imgBm, sx,sy,sw,sh, 60,yOff,iw,ih);
+        ctx.restore();
+        yOff += ih+24;
+      }
+    }
+
+    // 白色文字卡片
+    const cardH = hasImg ? 520 : 780;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.93)';
+    ctx.shadowColor='rgba(0,0,0,0.1)'; ctx.shadowBlur=30;
+    roundRect(ctx, 60, yOff, CANVAS_W-120, cardH, 36);
+    ctx.fill();
+    ctx.restore();
+
+    const px=110, contentW=CANVAS_W-220;
+    let ty = yOff+70;
+
+    // 根据类型绘制不同内容
+    if(type==='food'){
+      // 菜名大标题
+      ctx.save();
+      ctx.font='bold 60px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle=theme.accent;
+      ctx.textAlign='left';
+      wrapText(ctx, record.name||'', px, ty, contentW, 72, 2);
+      ty+=90;
+      ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#aaa';
+      ctx.fillText(fmtDate(record.date), px, ty);
+      ty+=60;
+      if(record.desc){
+        ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.fillStyle='#555';
+        const lines=wrapText(ctx,record.desc,px,ty,contentW,56,hasImg?4:7);
+        ty+=lines*56+30;
+      }
+      ctx.restore();
+
+    } else if(type==='travel'){
+      ctx.save();
+      ctx.font='bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle=theme.accent;
+      ctx.textAlign='left';
+      ctx.fillText('📍 '+record.place||'', px, ty);
+      ty+=80;
+      ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#aaa';
+      ctx.fillText(fmtDate(record.date), px, ty);
+      ty+=60;
+      if(record.note){
+        ctx.font='40px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.fillStyle='#444';
+        wrapText(ctx,record.note,px,ty,contentW,60,hasImg?4:8);
+      }
+      ctx.restore();
+
+    } else if(type==='parenting'){
+      const srcLabel={video:'📹 视频',book:'📖 书籍',other:'✨ 其他'}[record.source]||'';
+      ctx.save();
+      // source badge
+      ctx.fillStyle=record.source==='book'?'#EEF0FA':record.source==='other'?'#E0F7F5':'#FFF8DC';
+      roundRect(ctx,px,ty-44,ctx.measureText(srcLabel).width+50,54,27);
+      ctx.fill();
+      ctx.font='32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#666'; ctx.textAlign='left';
+      ctx.fillText(srcLabel,px+20,ty+8-5);
+      ty+=74;
+      ctx.font='bold 52px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle=theme.accent;
+      wrapText(ctx,record.title||'',px,ty,contentW,66,2);
+      ty+=100;
+      ctx.font='36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#555';
+      wrapText(ctx,record.content||'',px,ty,contentW,54,hasImg?5:9);
+      ctx.restore();
+
+    } else if(type==='conversation'){
+      // 对话气泡风格
+      ctx.save();
+      ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#aaa'; ctx.textAlign='left';
+      ctx.fillText(fmtDate(record.date), px, ty);
+      ty+=60;
+
+      // 孩子气泡
+      ctx.font='80px serif'; ctx.textAlign='left';
+      ctx.fillText('👧', px, ty+60);
+      ctx.fillStyle='rgba(255,255,255,0.9)';
+      ctx.shadowColor='rgba(0,0,0,0.08)'; ctx.shadowBlur=15;
+      roundRect(ctx,px+100,ty,contentW-100,120,20);
+      ctx.fill();
+      ctx.shadowBlur=0;
+      ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#333'; ctx.textAlign='left';
+      const childLines=wrapText(ctx,record.words||'',px+130,ty+40,contentW-160,54,3);
+      ty+=Math.max(140,childLines*54+60);
+
+      if(record.feeling){
+        ty+=20;
+        ctx.font='36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.fillStyle='rgba(255,107,107,0.12)';
+        ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=10;
+        roundRect(ctx,px,ty,contentW-100,120,20);
+        ctx.fill();
+        ctx.shadowBlur=0;
+        ctx.fillStyle='#FF6B6B'; ctx.textAlign='left';
+        wrapText(ctx,record.feeling,px+30,ty+40,contentW-140,54,3);
+        ctx.font='70px serif'; ctx.textAlign='right';
+        ctx.fillText('💝',CANVAS_W-120,ty+80);
+      }
+      ctx.restore();
+
+    } else { // custom
+      ctx.save();
+      if(record.title){
+        ctx.font='bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.fillStyle=theme.accent; ctx.textAlign='left';
+        wrapText(ctx,record.title,px,ty,contentW,68,2);
+        ty+=100;
+      }
+      ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#aaa';
+      ctx.fillText(fmtDate(record.date),px,ty);
+      ty+=60;
+      ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#444';
+      wrapText(ctx,record.content||'',px,ty,contentW,58,hasImg?5:9);
+      ctx.restore();
+    }
+
+    drawFooter(ctx, fmtDate(record.date));
+    const typeLabel={food:'美食',travel:'出游',parenting:'育儿',conversation:'对话',custom:'记录'}[type]||type;
+    showCanvasPreview(canvas, `${typeLabel}-${record.date}.png`);
+    toast('📷 图片已生成，可长按保存！');
+  })();
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+async function init() {
+  // modal close
+  document.getElementById('modal-x').onclick   = closeModal;
+  document.getElementById('modal-ov').onclick  = e=>{ if(e.target===document.getElementById('modal-ov')) closeModal(); };
+  document.getElementById('set-x').onclick     = ()=>document.getElementById('set-ov').classList.remove('open');
+  document.getElementById('set-ov').onclick    = e=>{ if(e.target===document.getElementById('set-ov')) document.getElementById('set-ov').classList.remove('open'); };
+  document.getElementById('btn-settings').onclick = openSettings;
+  // preview close
+  document.getElementById('preview-close').onclick = ()=>document.getElementById('preview-overlay').classList.remove('open');
+  document.getElementById('preview-overlay').onclick = e=>{ if(e.target===document.getElementById('preview-overlay')) document.getElementById('preview-overlay').classList.remove('open'); };
+
+  // load data
+  try { await loadAll(); } catch(e){ console.error(e); }
+
+  renderTabBar();
+  renderMain();
+}
+
+init();
+</script>
+</body>
+</html>
