@@ -602,7 +602,7 @@ function renderExercise() {
       ${jumped ? '✅ 今日已打卡！' : '🏃 点击打卡跳操'}
     </button>
     <div class="record-row">
-      <input class="form-input" id="input-steps" type="number" placeholder="今日步数（如 8500）" value="${todayData.steps||''}">
+      <input class="form-input" id="input-steps" type="number" placeholder="今日走路步数（如 8500）" value="${todayData.steps||''}">
       <button class="btn btn-mint btn-sm" onclick="saveSteps()">记录</button>
     </div>
     <div class="record-row">
@@ -1486,7 +1486,7 @@ function genExerciseCard() {
 
     // 三格数据
     const items = [
-      {icon:'👟', label:'今日步数', val: todayData.steps?todayData.steps.toLocaleString():'—', unit:'步'},
+      {icon:'👟', label:'今日走路步数', val: todayData.steps?todayData.steps.toLocaleString():'—', unit:'步'},
       {icon:'🏃', label:'今日跑步', val: todayData.run_km||'—', unit:'km'},
       {icon:'🔥', label:'连续打卡', val: stats.streak, unit:'天'},
     ];

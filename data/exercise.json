@@ -1827,474 +1827,474 @@
     },
     "2026-01-01": {
       "jumped": false,
-      "steps": null,
+      "steps": 11619,
       "run_km": null
     },
     "2026-01-02": {
       "jumped": false,
-      "steps": null,
+      "steps": 10126,
       "run_km": null
     },
     "2026-01-03": {
       "jumped": false,
-      "steps": null,
+      "steps": 7571,
       "run_km": null
     },
     "2026-01-04": {
       "jumped": true,
-      "steps": null,
+      "steps": 9771,
       "run_km": null
     },
     "2026-01-05": {
       "jumped": true,
-      "steps": null,
+      "steps": 4728,
       "run_km": null
     },
     "2026-01-06": {
       "jumped": true,
-      "steps": null,
+      "steps": 3895,
       "run_km": null
     },
     "2026-01-07": {
       "jumped": true,
-      "steps": null,
+      "steps": 9952,
       "run_km": null
     },
     "2026-01-08": {
       "jumped": false,
-      "steps": null,
+      "steps": 9108,
       "run_km": null
     },
     "2026-01-09": {
       "jumped": false,
-      "steps": null,
+      "steps": 11932,
       "run_km": null
     },
     "2026-01-10": {
       "jumped": false,
-      "steps": null,
+      "steps": 9232,
       "run_km": null
     },
     "2026-01-11": {
       "jumped": false,
-      "steps": null,
+      "steps": 8839,
       "run_km": null
     },
     "2026-01-12": {
       "jumped": true,
-      "steps": null,
+      "steps": 9026,
       "run_km": null
     },
     "2026-01-13": {
       "jumped": true,
-      "steps": null,
+      "steps": 9653,
       "run_km": null
     },
     "2026-01-14": {
       "jumped": false,
-      "steps": null,
+      "steps": 10393,
       "run_km": null
     },
     "2026-01-15": {
       "jumped": false,
-      "steps": null,
+      "steps": 9881,
       "run_km": null
     },
     "2026-01-16": {
       "jumped": false,
-      "steps": null,
+      "steps": 10378,
       "run_km": null
     },
     "2026-01-17": {
       "jumped": false,
-      "steps": null,
+      "steps": 4408,
       "run_km": null
     },
     "2026-01-18": {
       "jumped": false,
-      "steps": null,
+      "steps": 9472,
       "run_km": null
     },
     "2026-01-19": {
       "jumped": false,
-      "steps": null,
+      "steps": 9177,
       "run_km": null
     },
     "2026-01-20": {
       "jumped": false,
-      "steps": null,
+      "steps": 11196,
       "run_km": null
     },
     "2026-01-21": {
       "jumped": false,
-      "steps": null,
+      "steps": 4200,
       "run_km": null
     },
     "2026-01-22": {
       "jumped": true,
-      "steps": null,
+      "steps": 11574,
       "run_km": null
     },
     "2026-01-23": {
       "jumped": true,
-      "steps": null,
+      "steps": 10481,
       "run_km": null
     },
     "2026-01-24": {
       "jumped": false,
-      "steps": null,
+      "steps": 5708,
       "run_km": null
     },
     "2026-01-25": {
       "jumped": false,
-      "steps": null,
+      "steps": 7933,
       "run_km": null
     },
     "2026-01-26": {
       "jumped": true,
-      "steps": null,
+      "steps": 9326,
       "run_km": null
     },
     "2026-01-27": {
       "jumped": false,
-      "steps": null,
+      "steps": 9413,
       "run_km": null
     },
     "2026-01-28": {
       "jumped": false,
-      "steps": null,
+      "steps": 10857,
       "run_km": null
     },
     "2026-01-29": {
       "jumped": false,
-      "steps": null,
+      "steps": 10494,
       "run_km": null
     },
     "2026-01-30": {
       "jumped": false,
-      "steps": null,
+      "steps": 10455,
       "run_km": null
     },
     "2026-01-31": {
       "jumped": false,
-      "steps": null,
+      "steps": 8093,
       "run_km": null
     },
     "2026-02-01": {
       "jumped": false,
-      "steps": null,
+      "steps": 9799,
       "run_km": null
     },
     "2026-02-02": {
       "jumped": false,
-      "steps": null,
+      "steps": 11495,
       "run_km": null
     },
     "2026-02-03": {
       "jumped": false,
-      "steps": null,
+      "steps": 11187,
       "run_km": null
     },
     "2026-02-04": {
       "jumped": false,
-      "steps": null,
+      "steps": 9669,
       "run_km": null
     },
     "2026-02-05": {
       "jumped": false,
-      "steps": null,
+      "steps": 10105,
       "run_km": null
     },
     "2026-02-06": {
       "jumped": false,
-      "steps": null,
+      "steps": 11621,
       "run_km": null
     },
     "2026-02-07": {
       "jumped": false,
-      "steps": null,
+      "steps": 7899,
       "run_km": null
     },
     "2026-02-08": {
       "jumped": false,
-      "steps": null,
+      "steps": 10452,
       "run_km": null
     },
     "2026-02-09": {
       "jumped": false,
-      "steps": null,
+      "steps": 9229,
       "run_km": null
     },
     "2026-02-10": {
       "jumped": false,
-      "steps": null,
+      "steps": 9131,
       "run_km": null
     },
     "2026-02-11": {
       "jumped": false,
-      "steps": null,
+      "steps": 10643,
       "run_km": null
     },
     "2026-02-12": {
       "jumped": false,
-      "steps": null,
+      "steps": 9864,
       "run_km": null
     },
     "2026-02-13": {
       "jumped": false,
-      "steps": null,
+      "steps": 11323,
       "run_km": null
     },
     "2026-02-14": {
       "jumped": false,
-      "steps": null,
+      "steps": 8288,
       "run_km": null
     },
     "2026-02-15": {
       "jumped": false,
-      "steps": null,
+      "steps": 9044,
       "run_km": null
     },
     "2026-02-16": {
       "jumped": false,
-      "steps": null,
+      "steps": 11633,
       "run_km": null
     },
     "2026-02-17": {
       "jumped": false,
-      "steps": null,
+      "steps": 10084,
       "run_km": null
     },
     "2026-02-18": {
       "jumped": false,
-      "steps": null,
+      "steps": 11299,
       "run_km": null
     },
     "2026-02-19": {
       "jumped": false,
-      "steps": null,
+      "steps": 11394,
       "run_km": null
     },
     "2026-02-20": {
       "jumped": false,
-      "steps": null,
+      "steps": 11390,
       "run_km": null
     },
     "2026-02-21": {
       "jumped": false,
-      "steps": null,
+      "steps": 7898,
       "run_km": null
     },
     "2026-02-22": {
       "jumped": false,
-      "steps": null,
+      "steps": 7566,
       "run_km": null
     },
     "2026-02-23": {
       "jumped": false,
-      "steps": null,
+      "steps": 9372,
       "run_km": null
     },
     "2026-02-24": {
       "jumped": false,
-      "steps": null,
+      "steps": 9449,
       "run_km": null
     },
     "2026-02-25": {
       "jumped": true,
-      "steps": null,
+      "steps": 9655,
       "run_km": null
     },
     "2026-02-26": {
       "jumped": true,
-      "steps": null,
+      "steps": 10729,
       "run_km": null
     },
     "2026-02-27": {
       "jumped": true,
-      "steps": null,
+      "steps": 10576,
       "run_km": null
     },
     "2026-02-28": {
       "jumped": false,
-      "steps": null,
+      "steps": 8917,
       "run_km": null
     },
     "2026-03-01": {
       "jumped": false,
-      "steps": null,
+      "steps": 10977,
       "run_km": null
     },
     "2026-03-02": {
       "jumped": false,
-      "steps": null,
+      "steps": 9047,
       "run_km": null
     },
     "2026-03-03": {
       "jumped": false,
-      "steps": null,
+      "steps": 9469,
       "run_km": null
     },
     "2026-03-04": {
       "jumped": false,
-      "steps": null,
+      "steps": 11199,
       "run_km": null
     },
     "2026-03-05": {
       "jumped": true,
-      "steps": null,
+      "steps": 11625,
       "run_km": null
     },
     "2026-03-06": {
       "jumped": true,
-      "steps": null,
+      "steps": 10202,
       "run_km": null
     },
     "2026-03-07": {
       "jumped": true,
-      "steps": null,
+      "steps": 5957,
       "run_km": 5.0
     },
     "2026-03-08": {
       "jumped": false,
-      "steps": null,
+      "steps": 10587,
       "run_km": null
     },
     "2026-03-09": {
       "jumped": true,
-      "steps": null,
+      "steps": 11050,
       "run_km": null
     },
     "2026-03-10": {
       "jumped": true,
-      "steps": null,
+      "steps": 11079,
       "run_km": null
     },
     "2026-03-11": {
       "jumped": true,
-      "steps": null,
+      "steps": 11561,
       "run_km": null
     },
     "2026-03-12": {
       "jumped": false,
-      "steps": null,
+      "steps": 11617,
       "run_km": null
     },
     "2026-03-13": {
       "jumped": true,
-      "steps": null,
+      "steps": 9814,
       "run_km": null
     },
     "2026-03-14": {
       "jumped": true,
-      "steps": null,
+      "steps": 10123,
       "run_km": 5.0
     },
     "2026-03-15": {
       "jumped": false,
-      "steps": null,
+      "steps": 10905,
       "run_km": null
     },
     "2026-03-16": {
       "jumped": true,
-      "steps": null,
+      "steps": 11172,
       "run_km": null
     },
     "2026-03-17": {
       "jumped": true,
-      "steps": null,
+      "steps": 11453,
       "run_km": null
     },
     "2026-03-18": {
       "jumped": false,
-      "steps": null,
+      "steps": 9079,
       "run_km": null
     },
     "2026-03-19": {
       "jumped": true,
-      "steps": null,
+      "steps": 10486,
       "run_km": null
     },
     "2026-03-20": {
       "jumped": false,
-      "steps": null,
+      "steps": 10259,
       "run_km": null
     },
     "2026-03-21": {
       "jumped": false,
-      "steps": null,
+      "steps": 7986,
       "run_km": null
     },
     "2026-03-22": {
       "jumped": false,
-      "steps": null,
+      "steps": 5997,
       "run_km": null
     },
     "2026-03-23": {
       "jumped": false,
-      "steps": null,
+      "steps": 10990,
       "run_km": null
     },
     "2026-03-24": {
       "jumped": false,
-      "steps": null,
+      "steps": 11181,
       "run_km": null
     },
     "2026-03-25": {
       "jumped": false,
-      "steps": null,
+      "steps": 9525,
       "run_km": null
     },
     "2026-03-26": {
       "jumped": false,
-      "steps": null,
+      "steps": 11251,
       "run_km": null
     },
     "2026-03-27": {
       "jumped": false,
-      "steps": null,
+      "steps": 11161,
       "run_km": null
     },
     "2026-03-28": {
       "jumped": false,
-      "steps": null,
+      "steps": 8733,
       "run_km": null
     },
     "2026-03-29": {
       "jumped": false,
-      "steps": null,
+      "steps": 10804,
       "run_km": null
     },
     "2026-03-30": {
       "jumped": true,
-      "steps": null,
+      "steps": 11989,
       "run_km": null
     },
     "2026-03-31": {
       "jumped": false,
-      "steps": null,
+      "steps": 11920,
       "run_km": null
     },
     "2026-04-01": {
       "jumped": false,
-      "steps": null,
+      "steps": 11751,
       "run_km": null
     },
     "2026-04-02": {
       "jumped": false,
-      "steps": null,
+      "steps": 10794,
       "run_km": null
     },
     "2026-04-03": {
       "jumped": true,
-      "steps": null,
+      "steps": 10849,
       "run_km": null
     }
   },
   "stats": {
     "total_jump_days": 25,
     "current_streak": 1,
-    "total_steps": 0,
+    "total_steps": 911194,
     "total_run_km": 10.0
   }
 }
