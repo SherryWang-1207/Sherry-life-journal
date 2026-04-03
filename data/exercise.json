@@ -2286,14 +2286,14 @@
       "run_km": null
     },
     "2026-04-03": {
-      "jumped": false,
+      "jumped": true,
       "steps": null,
       "run_km": null
     }
   },
   "stats": {
-    "total_jump_days": 24,
-    "current_streak": 0,
+    "total_jump_days": 25,
+    "current_streak": 1,
     "total_steps": 0,
     "total_run_km": 10.0
   }
