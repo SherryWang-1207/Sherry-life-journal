@@ -498,6 +498,7 @@ async function loadAll() {
       localStorage.setItem(lk, JSON.stringify(d));
     } catch(e) {
       console.warn('load fail', files[i], e);
+      toast('⚠️ 读取'+k+'失败: '+e.message);
       const c = localStorage.getItem(lk);
       if(c) { S.data[k] = JSON.parse(c); toast('📦 离线缓存：'+keys[i]); }
       else   { S.data[k] = keys[i]==='custom'?{tabs:[],records:[]}:{records:[]}; }
