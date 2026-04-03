@@ -1414,23 +1414,24 @@ function wrapText(ctx, text, x, y, maxW, lineH, maxLines=99) {
 }
 
 // 通用卡片绘制框架
-async function drawCardBase(ctx, theme, headerIcon, headerText) {
+async function drawCardBase(ctx, theme, headerIcon, headerText, canvasH) {
+  const CH = canvasH || CANVAS_H;
   // 背景渐变
   const [c1, c2, c3] = theme.bg;
-  const grad = ctx.createLinearGradient(0,0,CANVAS_W,CANVAS_H);
+  const grad = ctx.createLinearGradient(0,0,CANVAS_W,CH);
   grad.addColorStop(0,   c1);
   grad.addColorStop(0.5, c2);
   grad.addColorStop(1,   c3||c2);
   ctx.fillStyle = grad;
-  ctx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.fillRect(0,0,CANVAS_W,CH);
 
   // 装饰圆
   ctx.save();
   ctx.globalAlpha = 0.15;
   ctx.fillStyle = 'white';
-  ctx.beginPath(); ctx.arc(CANVAS_W*0.85, CANVAS_H*0.08, 220, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(CANVAS_W*0.1,  CANVAS_H*0.92, 180, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(CANVAS_W*0.5,  CANVAS_H*0.55, 300, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(CANVAS_W*0.85, CH*0.08, 220, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(CANVAS_W*0.1,  CH*0.92, 180, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(CANVAS_W*0.5,  CH*0.55, 300, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 
   // 顶部 logo 区域
@@ -1465,18 +1466,19 @@ async function drawCardBase(ctx, theme, headerIcon, headerText) {
 }
 
 // 底部水印
-function drawFooter(ctx, dateStr) {
+function drawFooter(ctx, dateStr, canvasH) {
+  const CH = canvasH || CANVAS_H;
   ctx.save();
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  roundRect(ctx, 60, CANVAS_H-110, CANVAS_W-120, 70, 20);
+  roundRect(ctx, 60, CH-110, CANVAS_W-120, 70, 20);
   ctx.fill();
   ctx.font = '32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.textAlign = 'left';
-  ctx.fillText(dateStr || todaySH(), 100, CANVAS_H-65);
+  ctx.fillText(dateStr || todaySH(), 100, CH-65);
   ctx.textAlign = 'right';
   ctx.font = 'bold 28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-  ctx.fillText('她的生活 · 记录每一天 🌸', CANVAS_W-100, CANVAS_H-65);
+  ctx.fillText('她的生活 · 记录每一天 🌸', CANVAS_W-100, CH-65);
   ctx.restore();
 }
 
@@ -2009,15 +2011,57 @@ function genCustomSummaryCard(tabId) {
 }
 
 // ── 通用记录卡片 ──
+// measureContent: dry-run pass to calculate needed height
+function measureContent(type, record, hasImg, ctx) {
+  const px = 110, contentW = CANVAS_W - 220;
+  let ty = 0;
+  if (type === 'food') {
+    ctx.font = 'bold 60px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    const tl = wrapText(ctx, record.name||'', px, ty, contentW, 72, 99); ty += tl*72+20;
+    ty += 60; // date
+    if (record.desc) {
+      ctx.font = '38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      const dl = wrapText(ctx, record.desc, px, ty, contentW, 56, 99); ty += dl*56+30;
+    }
+  } else if (type === 'travel') {
+    ctx.font = 'bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    ty += 80; // place
+    ty += 60; // date
+    if (record.note) {
+      ctx.font = '40px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      const nl = wrapText(ctx, record.note, px, ty, contentW, 60, 99); ty += nl*60+30;
+    }
+  } else if (type === 'parenting') {
+    ty += 74; // badge
+    ctx.font = 'bold 52px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    const tl = wrapText(ctx, record.title||'', px, ty, contentW, 66, 99); ty += tl*66+30;
+    ctx.font = '36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    const cl = wrapText(ctx, record.content||'', px, ty, contentW, 54, 99); ty += cl*54+30;
+  } else if (type === 'conversation') {
+    ty += 60; // date
+    ctx.font = '38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    const wl = wrapText(ctx, record.words||'', px+130, ty, contentW-160, 54, 99);
+    ty += Math.max(140, wl*54+60) + 20;
+    if (record.feeling) {
+      const fl = wrapText(ctx, record.feeling, px+30, ty, contentW-140, 54, 99);
+      ty += Math.max(130, fl*54+60) + 20;
+    }
+  } else {
+    if (record.title) {
+      ctx.font = 'bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      const tl = wrapText(ctx, record.title, px, ty, contentW, 68, 99); ty += tl*68+20;
+    }
+    ty += 60; // date
+    ctx.font = '38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+    const cl = wrapText(ctx, record.content||'', px, ty, contentW, 58, 99); ty += cl*58+30;
+  }
+  return ty;
+}
+
 function genCard(type, record) {
   const theme = TAB_THEME[type]||TAB_THEME.custom;
-  const canvas = document.createElement('canvas');
-  canvas.width  = CANVAS_W;
-  canvas.height = CANVAS_H;
-  const ctx = canvas.getContext('2d');
 
   (async()=>{
-    // 各板块 header 标签
     const headers = {
       food:        {icon:'🍳', text:'美食'},
       travel:      {icon:'🗺️', text:'出游'},
@@ -2026,35 +2070,54 @@ function genCard(type, record) {
       custom:      {icon:'✨', text:'记录'},
     };
     const hdr = headers[type]||{icon:'✨',text:'记录'};
-    await drawCardBase(ctx, theme, hdr.icon, hdr.text);
 
-    let yOff = 220; // 卡片内容起始 Y
+    // ── 1. load image if any ──
+    let imgBm = null;
+    if (record.image) imgBm = await loadImg(record.image);
+    const hasImg = !!imgBm;
 
-    // 如有图片，上方展示
-    let hasImg = false;
-    if(record.image) {
-      const imgBm = await loadImg(record.image);
-      if(imgBm){
-        hasImg = true;
-        // 图片区域（圆角裁剪）
-        const iw=CANVAS_W-120, ih=460;
-        ctx.save();
-        roundRect(ctx, 60, yOff, iw, ih, 30);
-        ctx.clip();
-        // cover fit
-        const ir = imgBm.width/imgBm.height;
-        const fr = iw/ih;
-        let sx=0,sy=0,sw=imgBm.width,sh=imgBm.height;
-        if(ir>fr){ sw=imgBm.height*fr; sx=(imgBm.width-sw)/2; }
-        else      { sh=imgBm.width/fr; sy=(imgBm.height-sh)/2; }
-        ctx.drawImage(imgBm, sx,sy,sw,sh, 60,yOff,iw,ih);
-        ctx.restore();
-        yOff += ih+24;
-      }
+    // ── 2. measure pass ──
+    const measureCanvas = document.createElement('canvas');
+    measureCanvas.width = CANVAS_W; measureCanvas.height = 100;
+    const mctx = measureCanvas.getContext('2d');
+    const contentMeasured = measureContent(type, record, hasImg, mctx);
+
+    // ── 3. compute canvas height ──
+    const HEADER_H   = 200;   // top header bar
+    const IMG_H      = hasImg ? 484 : 0;
+    const CARD_PAD   = 80+80; // top+bottom padding inside white card
+    const CARD_MARGIN_TOP = 24;
+    const FOOTER_H   = 130;
+    const BOTTOM_PAD = 40;
+    const cardH      = contentMeasured + CARD_PAD + 60; // 60 extra breathing room
+    const totalH     = HEADER_H + IMG_H + CARD_MARGIN_TOP + cardH + FOOTER_H + BOTTOM_PAD;
+    const canvasH    = Math.max(1080, totalH); // min 1080
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = CANVAS_W;
+    canvas.height = canvasH;
+    const ctx = canvas.getContext('2d');
+
+    await drawCardBase(ctx, theme, hdr.icon, hdr.text, canvasH);
+
+    let yOff = 200;
+
+    // ── image ──
+    if (hasImg) {
+      const iw=CANVAS_W-120, ih=460;
+      ctx.save();
+      roundRect(ctx, 60, yOff, iw, ih, 30);
+      ctx.clip();
+      const ir=imgBm.width/imgBm.height, fr=iw/ih;
+      let sx=0,sy=0,sw=imgBm.width,sh=imgBm.height;
+      if(ir>fr){ sw=imgBm.height*fr; sx=(imgBm.width-sw)/2; }
+      else      { sh=imgBm.width/fr; sy=(imgBm.height-sh)/2; }
+      ctx.drawImage(imgBm, sx,sy,sw,sh, 60,yOff,iw,ih);
+      ctx.restore();
+      yOff += ih + 24;
     }
 
-    // 白色文字卡片
-    const cardH = hasImg ? 520 : 780;
+    // ── white card ──
     ctx.save();
     ctx.fillStyle = 'rgba(255,255,255,0.93)';
     ctx.shadowColor='rgba(0,0,0,0.1)'; ctx.shadowBlur=30;
@@ -2063,127 +2126,129 @@ function genCard(type, record) {
     ctx.restore();
 
     const px=110, contentW=CANVAS_W-220;
-    let ty = yOff+70;
+    let ty = yOff + 70;
 
-    // 根据类型绘制不同内容
-    if(type==='food'){
-      // 菜名大标题
+    // ── content by type ──
+    if (type==='food') {
       ctx.save();
       ctx.font='bold 60px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-      ctx.fillStyle=theme.accent;
-      ctx.textAlign='left';
-      wrapText(ctx, record.name||'', px, ty, contentW, 72, 2);
-      ty+=90;
+      ctx.fillStyle=theme.accent; ctx.textAlign='left';
+      const tl=wrapText(ctx,record.name||'',px,ty,contentW,72,99); ty+=tl*72+20;
       ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#aaa';
-      ctx.fillText(fmtDate(record.date), px, ty);
-      ty+=60;
+      ctx.fillText(fmtDate(record.date),px,ty); ty+=60;
       if(record.desc){
         ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
         ctx.fillStyle='#555';
-        const lines=wrapText(ctx,record.desc,px,ty,contentW,56,hasImg?4:7);
-        ty+=lines*56+30;
+        wrapText(ctx,record.desc,px,ty,contentW,56,99);
       }
       ctx.restore();
 
-    } else if(type==='travel'){
+    } else if (type==='travel') {
       ctx.save();
       ctx.font='bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-      ctx.fillStyle=theme.accent;
-      ctx.textAlign='left';
-      ctx.fillText('📍 '+record.place||'', px, ty);
-      ty+=80;
+      ctx.fillStyle=theme.accent; ctx.textAlign='left';
+      ctx.fillText('📍 '+(record.place||''),px,ty); ty+=80;
       ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#aaa';
-      ctx.fillText(fmtDate(record.date), px, ty);
-      ty+=60;
+      ctx.fillText(fmtDate(record.date),px,ty); ty+=60;
       if(record.note){
         ctx.font='40px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
         ctx.fillStyle='#444';
-        wrapText(ctx,record.note,px,ty,contentW,60,hasImg?4:8);
+        wrapText(ctx,record.note,px,ty,contentW,60,99);
       }
       ctx.restore();
 
-    } else if(type==='parenting'){
+    } else if (type==='parenting') {
       const srcLabel={video:'📹 视频',book:'📖 书籍',other:'✨ 其他'}[record.source]||'';
       ctx.save();
-      // source badge
       ctx.fillStyle=record.source==='book'?'#EEF0FA':record.source==='other'?'#E0F7F5':'#FFF8DC';
       roundRect(ctx,px,ty-44,ctx.measureText(srcLabel).width+50,54,27);
       ctx.fill();
       ctx.font='32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#666'; ctx.textAlign='left';
-      ctx.fillText(srcLabel,px+20,ty+8-5);
-      ty+=74;
+      ctx.fillText(srcLabel,px+20,ty+3); ty+=74;
       ctx.font='bold 52px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle=theme.accent;
-      wrapText(ctx,record.title||'',px,ty,contentW,66,2);
-      ty+=100;
+      const tl=wrapText(ctx,record.title||'',px,ty,contentW,66,99); ty+=tl*66+30;
       ctx.font='36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#555';
-      wrapText(ctx,record.content||'',px,ty,contentW,54,hasImg?5:9);
+      wrapText(ctx,record.content||'',px,ty,contentW,54,99);
       ctx.restore();
 
-    } else if(type==='conversation'){
-      // 对话气泡风格
+    } else if (type==='conversation') {
       ctx.save();
       ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#aaa'; ctx.textAlign='left';
-      ctx.fillText(fmtDate(record.date), px, ty);
-      ty+=60;
+      ctx.fillText(fmtDate(record.date),px,ty); ty+=60;
 
-      // 孩子气泡
-      ctx.font='80px serif'; ctx.textAlign='left';
-      ctx.fillText('👧', px, ty+60);
-      ctx.fillStyle='rgba(255,255,255,0.9)';
+      // 孩子对话气泡（动态高度）
+      ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      const wrapMeasure=(text,maxW)=>{
+        const chars=Array.from(text||'');
+        let line='',lines=[];
+        for(const ch of chars){
+          const test=line+ch;
+          if(ctx.measureText(test).width>maxW&&line){lines.push(line);line=ch;}
+          else{line=test;}
+        }
+        if(line)lines.push(line);
+        return lines.length;
+      };
+      const wordLineCount=wrapMeasure(record.words||'',contentW-160);
+      const bubbleH=Math.max(130,wordLineCount*54+60);
+
+      ctx.font='70px serif'; ctx.textAlign='left';
+      ctx.fillText('👧',px,ty+60);
+      ctx.fillStyle='rgba(255,255,255,0.92)';
       ctx.shadowColor='rgba(0,0,0,0.08)'; ctx.shadowBlur=15;
-      roundRect(ctx,px+100,ty,contentW-100,120,20);
+      roundRect(ctx,px+100,ty,contentW-100,bubbleH,20);
       ctx.fill();
       ctx.shadowBlur=0;
       ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#333'; ctx.textAlign='left';
-      const childLines=wrapText(ctx,record.words||'',px+130,ty+40,contentW-160,54,3);
-      ty+=Math.max(140,childLines*54+60);
+      wrapText(ctx,record.words||'',px+130,ty+42,contentW-160,54,99);
+      ty+=bubbleH+24;
 
       if(record.feeling){
-        ty+=20;
-        ctx.font='36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        const feelLineCount=wrapMeasure(record.feeling,contentW-140);
+        const feelH=Math.max(120,feelLineCount*54+60);
         ctx.fillStyle='rgba(255,107,107,0.12)';
         ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=10;
-        roundRect(ctx,px,ty,contentW-100,120,20);
+        roundRect(ctx,px,ty,contentW-80,feelH,20);
         ctx.fill();
         ctx.shadowBlur=0;
+        ctx.font='36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
         ctx.fillStyle='#FF6B6B'; ctx.textAlign='left';
-        wrapText(ctx,record.feeling,px+30,ty+40,contentW-140,54,3);
+        wrapText(ctx,record.feeling,px+30,ty+42,contentW-140,54,99);
         ctx.font='70px serif'; ctx.textAlign='right';
-        ctx.fillText('💝',CANVAS_W-120,ty+80);
+        ctx.fillText('💝',CANVAS_W-120,ty+feelH/2+20);
       }
       ctx.restore();
 
-    } else { // custom
+    } else {
       ctx.save();
       if(record.title){
         ctx.font='bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
         ctx.fillStyle=theme.accent; ctx.textAlign='left';
-        wrapText(ctx,record.title,px,ty,contentW,68,2);
-        ty+=100;
+        const tl=wrapText(ctx,record.title,px,ty,contentW,68,99); ty+=tl*68+20;
       }
       ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#aaa';
-      ctx.fillText(fmtDate(record.date),px,ty);
-      ty+=60;
+      ctx.fillText(fmtDate(record.date),px,ty); ty+=60;
       ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#444';
-      wrapText(ctx,record.content||'',px,ty,contentW,58,hasImg?5:9);
+      wrapText(ctx,record.content||'',px,ty,contentW,58,99);
       ctx.restore();
     }
 
-    drawFooter(ctx, fmtDate(record.date));
+    drawFooter(ctx, fmtDate(record.date), canvasH);
     const typeLabel={food:'美食',travel:'出游',parenting:'育儿',conversation:'对话',custom:'记录'}[type]||type;
     showCanvasPreview(canvas, `${typeLabel}-${record.date}.png`);
     toast('📷 图片已生成，可长按保存！');
   })();
 }
+
 
 // ─────────────────────────────────────────────
 // INIT
