@@ -927,7 +927,7 @@ function renderConversation() {
       ${renderConvBubbles(r.messages||[])}
     </div>
     <div class="conv-actions">
-      <button class="action-btn" style="background:#e8f5e9;color:#388e3c" onclick='openEditConversation(${JSON.stringify(r)})'>✏️ 编辑</button>
+      <button class="action-btn" style="background:#e8f5e9;color:#388e3c" onclick="openEditConversationById('${r.id}')">✏️ 编辑</button>
       <button class="action-btn action-img" onclick='genCard("conversation",${JSON.stringify(r)})'>📷 生成图片</button>
       <button class="action-btn action-del" onclick="delRecord('conversation','${r.id}')">删除</button>
     </div>
@@ -1226,28 +1226,50 @@ function openAddConversation() {
   cvRefreshBubbles();
 }
 
-function openEditConversation(r) {
-  const migrated = convMigrate(r);
+function openEditConversationById(id) {
+  // 从 S.data 里取原始记录，再 migrate，避免 JSON.stringify 在 onclick 里出错
+  const raw = (S.data.conversation?.records||[]).find(r=>r.id===id);
+  if(!raw){ toast('找不到该对话'); return; }
+  const migrated = convMigrate(raw);
   _cvMsgs = JSON.parse(JSON.stringify(migrated.messages||[]));
-  _cvEditId = r.id;
-  openModal('✏️ 编辑对话', convEditorHtml(r.date));
+  _cvEditId = id;
+  openModal('✏️ 编辑对话', convEditorHtml(migrated.date));
   cvRefreshBubbles();
+}
+
+function openEditConversation(r) {
+  openEditConversationById(r.id);
 }
 
 async function saveConversation() {
   const date = document.getElementById('cv-date').value;
   if(!_cvMsgs.length){ toast('请至少添加一条对话'); return; }
+  if(!S.data.conversation) S.data.conversation = {records:[]};
   if(!S.data.conversation.records) S.data.conversation.records=[];
-  if(_cvEditId) {
-    // 编辑模式：找到并更新
+  const isEdit = !!_cvEditId;
+  if(isEdit) {
+    // 编辑模式：找到并更新（用新格式覆盖，清除旧的 words/feeling）
     const idx = S.data.conversation.records.findIndex(r=>r.id===_cvEditId);
-    if(idx>=0) S.data.conversation.records[idx] = {id:_cvEditId, date, messages:[..._cvMsgs]};
+    if(idx>=0){
+      S.data.conversation.records[idx] = {id:_cvEditId, date, messages:[..._cvMsgs]};
+    } else {
+      // 找不到就作为新记录插入（兜底）
+      S.data.conversation.records.push({id:_cvEditId, date, messages:[..._cvMsgs]});
+    }
   } else {
     // 新建模式
     S.data.conversation.records.push({id:uid(), date, messages:[..._cvMsgs]});
   }
+  // 先把所有旧格式也迁移，保持数据整洁
+  S.data.conversation.records = S.data.conversation.records.map(r=>{
+    if(r.messages) return r;
+    const msgs=[];
+    if(r.words)   msgs.push({speaker:'qiqi',   text:r.words});
+    if(r.feeling) msgs.push({speaker:'huahua', text:r.feeling});
+    return {id:r.id, date:r.date, messages:msgs};
+  });
   const ok = await ghPut('data/conversation.json', S.data.conversation);
-  if(ok){ toast(_cvEditId?'✏️ 对话已更新！':'💬 对话已记录！'); closeModal(); renderMain(); }
+  if(ok){ toast(isEdit?'✏️ 对话已更新！':'💬 对话已记录！'); closeModal(); renderMain(); }
 }
 
 function openAddCustomRecord(tabId) {
