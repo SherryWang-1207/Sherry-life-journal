@@ -2500,16 +2500,18 @@ function measureContent(type, record, hasImg, ctx, convFontSize, convMsgs) {
     const avatarW = Math.round(fs * 1.84); // ~70px at fs=38
     ctx.font = `${fs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
     const msgs = convMsgs || (convMigrate(record).messages || []);
+    const bubbleTextW = contentW - avatarW - 48;
+    const innerPad = Math.round(fs * 0.55);
     msgs.forEach(m => {
-      const linesEst = wrapText(ctx, m.text||'', px+avatarW+24, ty, contentW-avatarW-48, lineH, 99);
-      ty += Math.max(avatarW+16, linesEst*lineH+Math.round(fs*1.05)) + Math.round(fs*0.53);
+      const linesEst = wrapText(ctx, m.text||'', px+avatarW+24, -9999, bubbleTextW, lineH, 99);
+      ty += Math.max(avatarW+16, linesEst*lineH+innerPad) + Math.round(fs*0.53);
     });
     if(record.reflection){
       const rfFs = Math.max(Math.round(fs*0.84), 26);
       const rfLH = Math.round(rfFs*1.38);
       ctx.font = `${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
-      const rfL = wrapText(ctx, record.reflection, px+24, ty, contentW-48, rfLH, 99);
-      ty += Math.max(100, rfL*rfLH+80) + 16;
+      const rfL = wrapText(ctx, record.reflection, px+24, -9999, contentW-48, rfLH, 99);
+      ty += Math.max(120, rfL*rfLH+100) + 16;
     }
   } else {
     if (record.title) {
