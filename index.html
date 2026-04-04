@@ -2411,9 +2411,9 @@ function measureContent(type, record, hasImg, ctx) {
   } else if (type === 'parenting') {
     ty += 74; // badge
     ctx.font = 'bold 52px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-    const tl = wrapText(ctx, record.title||'', px, ty, contentW, 66, 99); ty += tl*66+30;
+    const tl = wrapText(ctx, record.title||'', px, ty, contentW, 66, 99); ty += tl*66+36;
     ctx.font = '36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-    const cl = wrapText(ctx, record.content||'', px, ty, contentW, 54, 99); ty += cl*54+30;
+    const cl = wrapText(ctx, record.content||'', px, ty, contentW, 62, 99); ty += cl*62+36;
   } else if (type === 'conversation') {
     ctx.font = '38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
     const msgs = convMigrate(record).messages || [];
@@ -2557,10 +2557,10 @@ function genCard(type, recordOrId) {
       ctx.fillText(srcLabel,px+20,ty+3); ty+=74;
       ctx.font='bold 52px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle=theme.accent;
-      const tl=wrapText(ctx,record.title||'',px,ty,contentW,66,99); ty+=tl*66+30;
+      const tl=wrapText(ctx,record.title||'',px,ty,contentW,66,99); ty+=tl*66+36;
       ctx.font='36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#555';
-      wrapText(ctx,record.content||'',px,ty,contentW,54,99);
+      wrapText(ctx,record.content||'',px,ty,contentW,62,99);
       ctx.restore();
 
     } else if (type==='conversation') {
