@@ -2314,7 +2314,6 @@ function measureContent(type, record, hasImg, ctx) {
     ctx.font = '36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
     const cl = wrapText(ctx, record.content||'', px, ty, contentW, 54, 99); ty += cl*54+30;
   } else if (type === 'conversation') {
-    ty += 60; // date
     ctx.font = '38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
     const msgs = convMigrate(record).messages || [];
     msgs.forEach(m => {
@@ -2465,10 +2464,6 @@ function genCard(type, recordOrId) {
 
     } else if (type==='conversation') {
       ctx.save();
-      ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-      ctx.fillStyle='#aaa'; ctx.textAlign='left';
-      ctx.fillText(fmtDate(record.date),px,ty); ty+=60;
-
       const msgs = convMigrate(record).messages || [];
       ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       msgs.forEach(m => {
