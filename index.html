@@ -2389,7 +2389,9 @@ function genCustomSummaryCard(tabId) {
 
 // ── 通用记录卡片 ──
 // measureContent: dry-run pass to calculate needed height
-function measureContent(type, record, hasImg, ctx) {
+// convFontSize: optional override for conversation bubble font size (default 38)
+// convMsgs: optional override for messages array (for truncation simulation)
+function measureContent(type, record, hasImg, ctx, convFontSize, convMsgs) {
   const px = 110, contentW = CANVAS_W - 220;
   let ty = 0;
   if (type === 'food') {
@@ -2415,16 +2417,21 @@ function measureContent(type, record, hasImg, ctx) {
     ctx.font = '36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
     const cl = wrapText(ctx, record.content||'', px, ty, contentW, 62, 99); ty += cl*62+36;
   } else if (type === 'conversation') {
-    ctx.font = '38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-    const msgs = convMigrate(record).messages || [];
+    const fs = convFontSize || 38;
+    const lineH = Math.round(fs * 1.42);
+    const avatarW = Math.round(fs * 1.84); // ~70px at fs=38
+    ctx.font = `${fs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+    const msgs = convMsgs || (convMigrate(record).messages || []);
     msgs.forEach(m => {
-      const linesEst = wrapText(ctx, m.text||'', px+130, ty, contentW-160, 54, 99);
-      ty += Math.max(130, linesEst*54+60) + 20;
+      const linesEst = wrapText(ctx, m.text||'', px+avatarW+24, ty, contentW-avatarW-48, lineH, 99);
+      ty += Math.max(avatarW+16, linesEst*lineH+Math.round(fs*1.05)) + Math.round(fs*0.53);
     });
     if(record.reflection){
-      ctx.font = '32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-      const rfL = wrapText(ctx, record.reflection, px+24, ty, contentW-48, 44, 99);
-      ty += Math.max(100, rfL*44+80) + 16;
+      const rfFs = Math.max(Math.round(fs*0.84), 26);
+      const rfLH = Math.round(rfFs*1.38);
+      ctx.font = `${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+      const rfL = wrapText(ctx, record.reflection, px+24, ty, contentW-48, rfLH, 99);
+      ty += Math.max(100, rfL*rfLH+80) + 16;
     }
   } else {
     if (record.title) {
@@ -2463,22 +2470,56 @@ function genCard(type, recordOrId) {
     if (record.image) imgBm = await loadImg(record.image);
     const hasImg = !!imgBm;
 
-    // ── 2. measure pass ──
+    // ── 2. measure pass (with adaptive font for conversation) ──
     const measureCanvas = document.createElement('canvas');
     measureCanvas.width = CANVAS_W; measureCanvas.height = 100;
     const mctx = measureCanvas.getContext('2d');
-    const contentMeasured = measureContent(type, record, hasImg, mctx);
 
-    // ── 3. compute canvas height ──
-    const HEADER_H   = 200;   // top header bar
+    const HEADER_H   = 200;
     const IMG_H      = hasImg ? 484 : 0;
-    const CARD_PAD   = 80+80; // top+bottom padding inside white card
+    const CARD_PAD   = 160;
     const CARD_MARGIN_TOP = 24;
     const FOOTER_H   = 130;
     const BOTTOM_PAD = 40;
-    const cardH      = contentMeasured + CARD_PAD + 60; // 60 extra breathing room
+    const MAX_H      = 1920;
+    const OVERHEAD   = HEADER_H + IMG_H + CARD_MARGIN_TOP + CARD_PAD + FOOTER_H + BOTTOM_PAD + 60;
+
+    let convFontSize = 38;
+    let convMsgsToRender = type === 'conversation' ? (convMigrate(record).messages || []) : null;
+
+    // Step A: try shrinking font down to 28px
+    if (type === 'conversation') {
+      let measured = measureContent(type, record, hasImg, mctx, convFontSize, convMsgsToRender);
+      if (measured + OVERHEAD > MAX_H) {
+        // Binary-search font size between 28 and 38
+        let lo = 28, hi = 38;
+        for (let i = 0; i < 6; i++) {
+          const mid = Math.round((lo + hi) / 2);
+          const m = measureContent(type, record, hasImg, mctx, mid, convMsgsToRender);
+          if (m + OVERHEAD <= MAX_H) lo = mid; else hi = mid - 1;
+        }
+        convFontSize = Math.max(28, lo);
+        measured = measureContent(type, record, hasImg, mctx, convFontSize, convMsgsToRender);
+      }
+
+      // Step B: still too tall → truncate messages from the end (keep reflection)
+      if (measured + OVERHEAD > MAX_H) {
+        let msgs = [...convMsgsToRender];
+        while (msgs.length > 1) {
+          msgs = msgs.slice(0, msgs.length - 1);
+          const m = measureContent(type, record, hasImg, mctx, convFontSize, msgs);
+          if (m + OVERHEAD <= MAX_H) break;
+        }
+        convMsgsToRender = msgs;
+      }
+    }
+
+    const contentMeasured = measureContent(type, record, hasImg, mctx, convFontSize, convMsgsToRender);
+
+    // ── 3. compute canvas height ──
+    const cardH      = contentMeasured + CARD_PAD + 60;
     const totalH     = HEADER_H + IMG_H + CARD_MARGIN_TOP + cardH + FOOTER_H + BOTTOM_PAD;
-    const canvasH    = Math.max(1080, totalH); // min 1080
+    const canvasH    = Math.min(MAX_H, Math.max(1080, totalH));
 
     const canvas = document.createElement('canvas');
     canvas.width  = CANVAS_W;
@@ -2566,57 +2607,76 @@ function genCard(type, recordOrId) {
     } else if (type==='conversation') {
       ctx.save();
       const msgs = convMigrate(record).messages || [];
-      ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-      msgs.forEach(m => {
+      // ── draw conversation with adaptive font ──
+      const cfs = convFontSize || 38;
+      const cLH = Math.round(cfs * 1.42);
+      const cAvatarSz = Math.round(cfs * 1.84);
+      const cAvatarFs = Math.round(cfs * 1.84); // emoji size
+      const cInnerPad = Math.round(cfs * 0.55);
+      const msgsToRender = convMsgsToRender || (convMigrate(record).messages||[]);
+      const truncated = convMsgsToRender && convMsgsToRender.length < (convMigrate(record).messages||[]).length;
+
+      ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+      msgsToRender.forEach(m => {
         const isQiqi = m.speaker === 'qiqi';
         const icon = isQiqi ? '🧒' : '👩';
         const text = m.text || '';
-        // measure lines
-        const lc = wrapText(ctx, text, px+130, ty, contentW-160, 54, 99);
-        const bH = Math.max(130, lc*54+60);
-        ctx.font='70px serif'; ctx.textAlign = isQiqi ? 'left' : 'right';
-        ctx.fillText(icon, isQiqi ? px : CANVAS_W-120, ty+60);
+        const lc = wrapText(ctx, text, px+cAvatarSz+24, ty, contentW-cAvatarSz-48, cLH, 99);
+        const bH = Math.max(cAvatarSz+16, lc*cLH+cInnerPad);
+        ctx.font=`${cAvatarFs}px serif`; ctx.textAlign = isQiqi ? 'left' : 'right';
+        ctx.fillText(icon, isQiqi ? px : CANVAS_W-px-cAvatarSz, ty+cAvatarSz-4);
         if(isQiqi){
           ctx.fillStyle='rgba(255,255,255,0.92)';
           ctx.shadowColor='rgba(0,0,0,0.08)'; ctx.shadowBlur=15;
-          roundRect(ctx, px+100, ty, contentW-100, bH, 20);
+          roundRect(ctx, px+cAvatarSz+8, ty, contentW-cAvatarSz-8, bH, 16);
           ctx.fill(); ctx.shadowBlur=0;
-          ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+          ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
           ctx.fillStyle='#333'; ctx.textAlign='left';
-          wrapText(ctx, text, px+130, ty+42, contentW-160, 54, 99);
+          wrapText(ctx, text, px+cAvatarSz+24, ty+Math.round(cfs*1.1), contentW-cAvatarSz-48, cLH, 99);
         } else {
-          ctx.fillStyle='rgba(149,236,105,0.75)';
+          ctx.fillStyle='rgba(149,236,105,0.82)';
           ctx.shadowColor='rgba(0,0,0,0.06)'; ctx.shadowBlur=12;
-          roundRect(ctx, px, ty, contentW-100, bH, 20);
+          roundRect(ctx, px, ty, contentW-cAvatarSz-8, bH, 16);
           ctx.fill(); ctx.shadowBlur=0;
-          ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+          ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
           ctx.fillStyle='#1a5c10'; ctx.textAlign='left';
-          wrapText(ctx, text, px+30, ty+42, contentW-160, 54, 99);
+          wrapText(ctx, text, px+16, ty+Math.round(cfs*1.1), contentW-cAvatarSz-48, cLH, 99);
         }
-        ty += bH+24;
-        ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ty += bH + Math.round(cfs*0.53);
+        ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
       });
+
+      // 截断提示
+      if(truncated){
+        ctx.save();
+        ctx.font=`italic 26px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.textAlign='center';
+        ctx.fillText('…… 部分对话已省略 ……', CANVAS_W/2, ty+20);
+        ctx.restore();
+        ty += 48;
+      }
 
       // 花花的感触
       if(record.reflection){
         ty += 16;
-        ctx.font='28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-        const rfLines = wrapText(ctx, record.reflection, px+20, ty, contentW-40, 44, 99);
-        const rfH = Math.max(100, rfLines*44+60);
+        const rfFs = Math.max(Math.round(cfs*0.84), 26);
+        const rfLH = Math.round(rfFs*1.38);
+        ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        const rfLines = wrapText(ctx, record.reflection, px+20, ty, contentW-40, rfLH, 99);
+        const rfH = Math.max(100, rfLines*rfLH+60);
         ctx.fillStyle='rgba(255,248,200,0.9)';
         ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=8;
         roundRect(ctx, px, ty-10, contentW, rfH+20, 16);
         ctx.fill(); ctx.shadowBlur=0;
-        // 左侧黄色边条
         ctx.fillStyle='#f5c842';
         roundRect(ctx, px, ty-10, 8, rfH+20, 4);
         ctx.fill();
-        ctx.font='bold 28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.font=`bold ${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
         ctx.fillStyle='#c89a00'; ctx.textAlign='left';
-        ctx.fillText('💛 花花的感触', px+24, ty+24);
-        ctx.font='32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.fillText('💛 花花的感触', px+24, ty+Math.round(rfFs*0.9));
+        ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
         ctx.fillStyle='#6b5000';
-        wrapText(ctx, record.reflection, px+24, ty+64, contentW-48, 44, 99);
+        wrapText(ctx, record.reflection, px+24, ty+Math.round(rfFs*0.9)+rfLH+8, contentW-48, rfLH, 99);
       }
       ctx.restore();
 
