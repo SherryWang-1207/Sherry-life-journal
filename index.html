@@ -2767,21 +2767,27 @@ function genCard(type, recordOrId) {
         const rfFs = Math.max(Math.round(cfs*0.84), 26);
         const rfLH = Math.round(rfFs*1.38);
         ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
-        const rfLines = wrapText(ctx, singlePageRecord.reflection, px+20, ty, contentW-40, rfLH, 99);
-        const rfH = Math.max(100, rfLines*rfLH+60);
+        // measure only (y=-9999 so nothing is drawn yet)
+        const rfLines = wrapText(ctx, singlePageRecord.reflection, px+24, -9999, contentW-48, rfLH, 99);
+        const rfHeaderH = Math.round(rfFs*0.9) + rfLH + 8; // header label + gap
+        const rfH = Math.max(100, rfHeaderH + rfLines*rfLH + 20);
+        // draw card background first
         ctx.fillStyle='rgba(255,248,200,0.9)';
         ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=8;
         roundRect(ctx, px, ty-10, contentW, rfH+20, 16);
         ctx.fill(); ctx.shadowBlur=0;
+        // left gold bar
         ctx.fillStyle='#f5c842';
         roundRect(ctx, px, ty-10, 8, rfH+20, 4);
         ctx.fill();
+        // header label
         ctx.font=`bold ${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
         ctx.fillStyle='#c89a00'; ctx.textAlign='left';
         ctx.fillText('💛 花花的感触', px+24, ty+Math.round(rfFs*0.9));
+        // body text
         ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
         ctx.fillStyle='#6b5000';
-        wrapText(ctx, singlePageRecord.reflection, px+24, ty+Math.round(rfFs*0.9)+rfLH+8, contentW-48, rfLH, 99);
+        wrapText(ctx, singlePageRecord.reflection, px+24, ty+rfHeaderH, contentW-48, rfLH, 99);
       }
       ctx.restore();
 
