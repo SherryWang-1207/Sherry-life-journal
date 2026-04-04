@@ -889,59 +889,48 @@ function renderParenting() {
 // ─────────────────────────────────────────────
 // ══════════ CONVERSATION ══════════
 // ─────────────────────────────────────────────
+
+// 将旧格式 {words, feeling} 兼容转换为新格式 {messages:[]}
+function convMigrate(r) {
+  if(r.messages) return r; // 已是新格式
+  const msgs = [];
+  if(r.words)   msgs.push({speaker:'qiqi',   text:r.words});
+  if(r.feeling) msgs.push({speaker:'huahua', text:r.feeling});
+  return {...r, messages: msgs};
+}
+
+function renderConvBubbles(msgs) {
+  return msgs.map(m => {
+    const isLeft = m.speaker === 'qiqi';
+    return `<div class="bubble-row ${isLeft?'bubble-left':'bubble-right'}">
+      <div class="bubble-avatar ${isLeft?'avatar-qiqi':'avatar-huahua'}">${isLeft?'🧒':'👩'}</div>
+      <div class="${isLeft?'bubble-left-wrap':'bubble-right-wrap'}">
+        <div class="bubble-name">${isLeft?'小七':'花花'}</div>
+        <div class="bubble-text">${escHtml(m.text)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderConversation() {
-  const recs = S.data.conversation?.records||[];
+  const recs = (S.data.conversation?.records||[]).map(convMigrate);
   if(!recs.length) return `
     <div class="empty">
       <div class="empty-icon">💬</div>
       <div class="empty-text">记录小七和花花的对话～</div>
     </div>`;
   const sorted = [...recs].sort((a,b)=>b.date.localeCompare(a.date));
-  // 按日期分组
-  const byDate = {};
-  sorted.forEach(r=>{ if(!byDate[r.date]) byDate[r.date]=[]; byDate[r.date].push(r); });
-  const dates = Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
-  return `<div class="conv-list">${dates.map(date=>{
-    const dayRecs = byDate[date];
-    return `<div class="conv-date-divider">${fmtDate(date)}</div>
-    <div class="bubble-wrap">
-      ${dayRecs.map(r=>{
-        // 判断谁先说：有 speaker 字段则按 speaker，否则默认小七先说
-        const speaker = r.speaker || 'qiqi';
-        const isQiqi = speaker === 'qiqi';
-        const bubbles = [];
-        // 小七的话
-        if(r.words) {
-          const wSpeaker = r.speaker2 ? (isQiqi ? 'qiqi' : 'huahua') : 'qiqi';
-          const isLeft = wSpeaker === 'qiqi';
-          bubbles.push(`<div class="bubble-row ${isLeft?'bubble-left':'bubble-right'}">
-            <div class="bubble-avatar ${isLeft?'avatar-qiqi':'avatar-huahua'}">${isLeft?'🧒':'👩'}</div>
-            <div class="${isLeft?'bubble-left-wrap':'bubble-right-wrap'}">
-              <div class="bubble-name">${isLeft?'小七':'花花'}</div>
-              <div class="bubble-text">${escHtml(r.words)}</div>
-            </div>
-          </div>`);
-        }
-        // 花花的回应
-        if(r.feeling) {
-          bubbles.push(`<div class="bubble-row bubble-right">
-            <div class="bubble-avatar avatar-huahua">👩</div>
-            <div class="bubble-right-wrap">
-              <div class="bubble-name">花花</div>
-              <div class="bubble-text">${escHtml(r.feeling)}</div>
-            </div>
-          </div>`);
-        }
-        return `<div style="position:relative">
-          ${bubbles.join('')}
-          <div class="conv-actions">
-            <button class="action-btn action-img" onclick='genCard("conversation",${JSON.stringify(r)})'>📷 生成图片</button>
-            <button class="action-btn action-del" onclick="delRecord('conversation','${r.id}')">删除</button>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  }).join('')}</div>`;
+  return `<div class="conv-list">${sorted.map(r=>`
+    <div class="conv-date-divider">${fmtDate(r.date)}</div>
+    <div class="bubble-wrap conv-thread" id="thread-${r.id}">
+      ${renderConvBubbles(r.messages||[])}
+    </div>
+    <div class="conv-actions">
+      <button class="action-btn" style="background:#e8f5e9;color:#388e3c" onclick='openEditConversation(${JSON.stringify(r)})'>✏️ 编辑</button>
+      <button class="action-btn action-img" onclick='genCard("conversation",${JSON.stringify(r)})'>📷 生成图片</button>
+      <button class="action-btn action-del" onclick="delRecord('conversation','${r.id}')">删除</button>
+    </div>
+  `).join('')}</div>`;
 }
 
 // ─────────────────────────────────────────────
@@ -1149,38 +1138,115 @@ async function saveParenting() {
   if(ok){ toast('📚 心得已保存！'); closeModal(); renderMain(); }
 }
 
-function openAddConversation() {
-  openModal('💬 记录对话', `
-    <div style="display:flex;gap:8px;margin-bottom:14px;background:#EDEDED;border-radius:12px;padding:10px 12px;align-items:center">
-      <div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#a8edea,#fed6e3);display:flex;align-items:center;justify-content:center;font-size:20px">🧒</div>
-      <div style="font-size:13px;color:#555;line-height:1.4"><b>小七</b> 和 <b>花花</b> 的对话<br><span style="font-size:11px;color:#888">小七的话在左，花花的回应在右</span></div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">🧒 小七说…… *</label>
-      <textarea class="form-textarea" id="cv-words" placeholder="小七说了什么～" style="min-height:72px"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">👩 花花回应……（可选）</label>
-      <textarea class="form-textarea" id="cv-feeling" placeholder="花花怎么回应的..." style="min-height:72px"></textarea>
-    </div>
+// ── 对话编辑器：临时存储当前编辑中的消息列表 ──
+let _cvMsgs = [];
+let _cvEditId = null;
+
+function convEditorHtml(date) {
+  return `
     <div class="form-group">
       <label class="form-label">日期</label>
-      <input class="form-input" type="date" id="cv-date" value="${todaySH()}">
+      <input class="form-input" type="date" id="cv-date" value="${date}">
     </div>
-    <button class="btn btn-full" style="background:linear-gradient(135deg,#C7CEEA,#b5c8f9);color:#4a4a7a;font-weight:600;box-shadow:0 3px 12px rgba(199,206,234,.5)" onclick="saveConversation()">💾 保存对话</button>
-  `);
+    <div id="cv-preview" style="background:#EDEDED;border-radius:12px;padding:10px 8px;margin-bottom:10px;min-height:60px;display:flex;flex-direction:column;gap:0">
+      <div id="cv-bubble-list"></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-sm" style="flex:1;background:linear-gradient(135deg,#a8edea,#fed6e3);color:#444" onclick="cvAddLine('qiqi')">🧒 小七说</button>
+      <button class="btn btn-sm" style="flex:1;background:linear-gradient(135deg,#f093fb,#f5576c);color:white" onclick="cvAddLine('huahua')">👩 花花说</button>
+    </div>
+    <div id="cv-input-area" style="display:none;margin-bottom:10px">
+      <div id="cv-input-label" style="font-size:13px;font-weight:600;margin-bottom:6px;color:#555"></div>
+      <textarea class="form-textarea" id="cv-input-text" style="min-height:64px" placeholder="说了什么……"></textarea>
+      <div style="display:flex;gap:8px;margin-top:6px">
+        <button class="btn btn-sm btn-ghost" style="flex:1" onclick="cvCancelLine()">取消</button>
+        <button class="btn btn-sm" style="flex:1;background:var(--purple);color:white" onclick="cvConfirmLine()">✓ 确认</button>
+      </div>
+    </div>
+    <button class="btn btn-full" style="background:linear-gradient(135deg,#C7CEEA,#b5c8f9);color:#4a4a7a;font-weight:600" onclick="saveConversation()">💾 保存对话</button>
+  `;
+}
+
+function cvRefreshBubbles() {
+  const el = document.getElementById('cv-bubble-list');
+  if(!el) return;
+  if(!_cvMsgs.length){
+    el.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:12px 0">点击上方按钮添加对话～</div>';
+    return;
+  }
+  el.innerHTML = _cvMsgs.map((m,i)=>{
+    const isLeft = m.speaker==='qiqi';
+    return `<div class="bubble-row ${isLeft?'bubble-left':'bubble-right'}" style="margin-bottom:8px">
+      <div class="bubble-avatar ${isLeft?'avatar-qiqi':'avatar-huahua'}" style="width:32px;height:32px;font-size:17px">${isLeft?'🧒':'👩'}</div>
+      <div class="${isLeft?'bubble-left-wrap':'bubble-right-wrap'}">
+        <div class="bubble-name">${isLeft?'小七':'花花'}</div>
+        <div class="bubble-text" style="font-size:13px">${escHtml(m.text)}</div>
+      </div>
+      <button onclick="cvDelLine(${i})" style="border:none;background:none;color:#ccc;font-size:16px;cursor:pointer;padding:0 2px;align-self:center">✕</button>
+    </div>`;
+  }).join('');
+}
+
+let _cvPendingSpeaker = null;
+function cvAddLine(speaker) {
+  _cvPendingSpeaker = speaker;
+  const area = document.getElementById('cv-input-area');
+  const label = document.getElementById('cv-input-label');
+  const txt = document.getElementById('cv-input-text');
+  if(!area) return;
+  label.textContent = speaker==='qiqi' ? '🧒 小七说……' : '👩 花花说……';
+  txt.value = '';
+  area.style.display = 'block';
+  txt.focus();
+}
+function cvCancelLine() {
+  _cvPendingSpeaker = null;
+  const area = document.getElementById('cv-input-area');
+  if(area) area.style.display = 'none';
+}
+function cvConfirmLine() {
+  const txt = document.getElementById('cv-input-text');
+  if(!txt) return;
+  const text = txt.value.trim();
+  if(!text){ toast('请输入内容'); return; }
+  _cvMsgs.push({speaker: _cvPendingSpeaker, text});
+  cvCancelLine();
+  cvRefreshBubbles();
+}
+function cvDelLine(i) {
+  _cvMsgs.splice(i,1);
+  cvRefreshBubbles();
+}
+
+function openAddConversation() {
+  _cvMsgs = [];
+  _cvEditId = null;
+  openModal('💬 新建对话', convEditorHtml(todaySH()));
+  cvRefreshBubbles();
+}
+
+function openEditConversation(r) {
+  const migrated = convMigrate(r);
+  _cvMsgs = JSON.parse(JSON.stringify(migrated.messages||[]));
+  _cvEditId = r.id;
+  openModal('✏️ 编辑对话', convEditorHtml(r.date));
+  cvRefreshBubbles();
 }
 
 async function saveConversation() {
-  const words   = document.getElementById('cv-words').value.trim();
-  const feeling = document.getElementById('cv-feeling').value.trim();
-  const date    = document.getElementById('cv-date').value;
-  if(!words){ toast('请输入孩子说的话'); return; }
-  const r = {id:uid(),words,feeling,date};
+  const date = document.getElementById('cv-date').value;
+  if(!_cvMsgs.length){ toast('请至少添加一条对话'); return; }
   if(!S.data.conversation.records) S.data.conversation.records=[];
-  S.data.conversation.records.push(r);
+  if(_cvEditId) {
+    // 编辑模式：找到并更新
+    const idx = S.data.conversation.records.findIndex(r=>r.id===_cvEditId);
+    if(idx>=0) S.data.conversation.records[idx] = {id:_cvEditId, date, messages:[..._cvMsgs]};
+  } else {
+    // 新建模式
+    S.data.conversation.records.push({id:uid(), date, messages:[..._cvMsgs]});
+  }
   const ok = await ghPut('data/conversation.json', S.data.conversation);
-  if(ok){ toast('💬 对话已记录！'); closeModal(); renderMain(); }
+  if(ok){ toast(_cvEditId?'✏️ 对话已更新！':'💬 对话已记录！'); closeModal(); renderMain(); }
 }
 
 function openAddCustomRecord(tabId) {
