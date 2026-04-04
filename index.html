@@ -2712,7 +2712,7 @@ function genCard(type, recordOrId) {
       const cAvatarSz = Math.round(cfs * 1.84);
       const cAvatarFs = Math.round(cfs * 1.84); // emoji size
       const cInnerPad = Math.round(cfs * 0.55);
-      const msgsToRender = _pageMsgs || convMsgsToRender || (convMigrate(record).messages||[]);
+      const msgsToRender = convMsgsToRender || (convMigrate(record).messages||[]);
       const truncated = false; // multi-page replaces truncation
 
       ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
@@ -2821,7 +2821,7 @@ function genCard(type, recordOrId) {
         pctx.fill(); pctx.restore();
         pty += 80; // card top padding
         // draw conversation bubbles using shared draw logic
-        let _pageMsgs = pageMsgs; // picked up by the closure in drawCard
+        // pageMsgs is the messages array for this page
         const cfs2 = convFontSize;
         const cLH2 = Math.round(cfs2*1.42), cAv2=Math.round(cfs2*1.84), cIp2=Math.round(cfs2*0.55);
         pctx.font=`${cfs2}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
