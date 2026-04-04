@@ -2720,10 +2720,14 @@ function genCard(type, recordOrId) {
         const isQiqi = m.speaker === 'qiqi';
         const icon = isQiqi ? '🧒' : '👩';
         const text = m.text || '';
-        const lc = wrapText(ctx, text, px+cAvatarSz+24, ty, contentW-cAvatarSz-48, cLH, 99);
+        const bubbleW = contentW - cAvatarSz - 48;
+        // measure-only: use wrapText at y=-9999 so nothing is drawn
+        const lc = wrapText(ctx, text, px+cAvatarSz+24, -9999, bubbleW, cLH, 99);
         const bH = Math.max(cAvatarSz+16, lc*cLH+cInnerPad);
+        // draw avatar
         ctx.font=`${cAvatarFs}px serif`; ctx.textAlign = isQiqi ? 'left' : 'right';
         ctx.fillText(icon, isQiqi ? px : CANVAS_W-px-cAvatarSz, ty+cAvatarSz-4);
+        // draw bubble + text
         if(isQiqi){
           ctx.fillStyle='rgba(255,255,255,0.92)';
           ctx.shadowColor='rgba(0,0,0,0.08)'; ctx.shadowBlur=15;
@@ -2731,7 +2735,7 @@ function genCard(type, recordOrId) {
           ctx.fill(); ctx.shadowBlur=0;
           ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
           ctx.fillStyle='#333'; ctx.textAlign='left';
-          wrapText(ctx, text, px+cAvatarSz+24, ty+Math.round(cfs*1.1), contentW-cAvatarSz-48, cLH, 99);
+          wrapText(ctx, text, px+cAvatarSz+24, ty+Math.round(cfs*1.1), bubbleW, cLH, 99);
         } else {
           ctx.fillStyle='rgba(149,236,105,0.82)';
           ctx.shadowColor='rgba(0,0,0,0.06)'; ctx.shadowBlur=12;
@@ -2739,7 +2743,7 @@ function genCard(type, recordOrId) {
           ctx.fill(); ctx.shadowBlur=0;
           ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
           ctx.fillStyle='#1a5c10'; ctx.textAlign='left';
-          wrapText(ctx, text, px+16, ty+Math.round(cfs*1.1), contentW-cAvatarSz-48, cLH, 99);
+          wrapText(ctx, text, px+16, ty+Math.round(cfs*1.1), bubbleW, cLH, 99);
         }
         ty += bH + Math.round(cfs*0.53);
         ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
