@@ -2017,8 +2017,8 @@ function genConversationSummaryCard() {
       ctx.restore();
     } else {
       let ty = 385;
-      const blockH = 290;
-      recs.forEach((r,i)=>{
+      recs.forEach((r)=>{
+        const msgs = convMigrate(r).messages || [];
         ctx.save();
         // 日期分割
         ctx.font='28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
@@ -2026,33 +2026,38 @@ function genConversationSummaryCard() {
         ctx.fillText(fmtDate(r.date), CANVAS_W/2, ty);
         ty += 44;
 
-        // 孩子说的话
-        const childBubbleH = Math.min(120, 50 + Math.ceil((r.words||'').length/18)*46);
-        ctx.fillStyle='rgba(255,255,255,0.92)';
-        ctx.shadowColor='rgba(0,0,0,0.06)'; ctx.shadowBlur=12;
-        roundRect(ctx,90,ty,CANVAS_W-240,childBubbleH,20);
-        ctx.fill(); ctx.shadowBlur=0;
-        ctx.font='36px serif'; ctx.textAlign='left';
-        ctx.fillText('👧', 94, ty+childBubbleH/2+12);
-        ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-        ctx.fillStyle='#333'; ctx.textAlign='left';
-        wrapText(ctx, r.words||'', 154, ty+38, CANVAS_W-330, 46, 3);
-        ty += childBubbleH + 14;
+        msgs.forEach(m => {
+          const isQiqi = m.speaker === 'qiqi';
+          const icon = isQiqi ? '🧒' : '👩';
+          const text = m.text || '';
+          const linesEst = Math.ceil(text.length / 18);
+          const bH = Math.min(isQiqi ? 140 : 120, 50 + linesEst * 46);
 
-        // 我的回应
-        if(r.feeling){
-          const meBubbleH = Math.min(100, 50 + Math.ceil((r.feeling||'').length/18)*42);
-          ctx.fillStyle='rgba(168,230,207,0.4)';
-          ctx.shadowColor='rgba(0,0,0,0.04)'; ctx.shadowBlur=8;
-          roundRect(ctx,160,ty,CANVAS_W-240,meBubbleH,20);
-          ctx.fill(); ctx.shadowBlur=0;
-          ctx.font='32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-          ctx.fillStyle=theme.accent; ctx.textAlign='left';
-          wrapText(ctx, r.feeling, 194, ty+34, CANVAS_W-360, 44, 2);
-          ctx.font='36px serif'; ctx.textAlign='right';
-          ctx.fillText('💝', CANVAS_W-100, ty+meBubbleH/2+12);
-          ty += meBubbleH + 10;
-        }
+          if(isQiqi){
+            // 左侧气泡
+            ctx.fillStyle='rgba(255,255,255,0.92)';
+            ctx.shadowColor='rgba(0,0,0,0.06)'; ctx.shadowBlur=12;
+            roundRect(ctx, 90, ty, CANVAS_W-240, bH, 20);
+            ctx.fill(); ctx.shadowBlur=0;
+            ctx.font='36px serif'; ctx.textAlign='left';
+            ctx.fillText(icon, 94, ty+bH/2+12);
+            ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+            ctx.fillStyle='#333'; ctx.textAlign='left';
+            wrapText(ctx, text, 154, ty+38, CANVAS_W-330, 46, 3);
+          } else {
+            // 右侧气泡（花花）
+            ctx.fillStyle='rgba(149,236,105,0.7)';
+            ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=10;
+            roundRect(ctx, 160, ty, CANVAS_W-240, bH, 20);
+            ctx.fill(); ctx.shadowBlur=0;
+            ctx.font='36px serif'; ctx.textAlign='right';
+            ctx.fillText(icon, CANVAS_W-104, ty+bH/2+12);
+            ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+            ctx.fillStyle='#1a5c10'; ctx.textAlign='left';
+            wrapText(ctx, text, 174, ty+38, CANVAS_W-330, 46, 3);
+          }
+          ty += bH + 14;
+        });
         ty += 20;
         ctx.restore();
       });
@@ -2169,12 +2174,11 @@ function measureContent(type, record, hasImg, ctx) {
   } else if (type === 'conversation') {
     ty += 60; // date
     ctx.font = '38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-    const wl = wrapText(ctx, record.words||'', px+130, ty, contentW-160, 54, 99);
-    ty += Math.max(140, wl*54+60) + 20;
-    if (record.feeling) {
-      const fl = wrapText(ctx, record.feeling, px+30, ty, contentW-140, 54, 99);
-      ty += Math.max(130, fl*54+60) + 20;
-    }
+    const msgs = convMigrate(record).messages || [];
+    msgs.forEach(m => {
+      const linesEst = wrapText(ctx, m.text||'', px+130, ty, contentW-160, 54, 99);
+      ty += Math.max(130, linesEst*54+60) + 20;
+    });
   } else {
     if (record.title) {
       ctx.font = 'bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
@@ -2311,48 +2315,37 @@ function genCard(type, record) {
       ctx.fillStyle='#aaa'; ctx.textAlign='left';
       ctx.fillText(fmtDate(record.date),px,ty); ty+=60;
 
-      // 孩子对话气泡（动态高度）
+      const msgs = convMigrate(record).messages || [];
       ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-      const wrapMeasure=(text,maxW)=>{
-        const chars=Array.from(text||'');
-        let line='',lines=[];
-        for(const ch of chars){
-          const test=line+ch;
-          if(ctx.measureText(test).width>maxW&&line){lines.push(line);line=ch;}
-          else{line=test;}
+      msgs.forEach(m => {
+        const isQiqi = m.speaker === 'qiqi';
+        const icon = isQiqi ? '🧒' : '👩';
+        const text = m.text || '';
+        // measure lines
+        const lc = wrapText(ctx, text, px+130, ty, contentW-160, 54, 99);
+        const bH = Math.max(130, lc*54+60);
+        ctx.font='70px serif'; ctx.textAlign = isQiqi ? 'left' : 'right';
+        ctx.fillText(icon, isQiqi ? px : CANVAS_W-120, ty+60);
+        if(isQiqi){
+          ctx.fillStyle='rgba(255,255,255,0.92)';
+          ctx.shadowColor='rgba(0,0,0,0.08)'; ctx.shadowBlur=15;
+          roundRect(ctx, px+100, ty, contentW-100, bH, 20);
+          ctx.fill(); ctx.shadowBlur=0;
+          ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+          ctx.fillStyle='#333'; ctx.textAlign='left';
+          wrapText(ctx, text, px+130, ty+42, contentW-160, 54, 99);
+        } else {
+          ctx.fillStyle='rgba(149,236,105,0.75)';
+          ctx.shadowColor='rgba(0,0,0,0.06)'; ctx.shadowBlur=12;
+          roundRect(ctx, px, ty, contentW-100, bH, 20);
+          ctx.fill(); ctx.shadowBlur=0;
+          ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+          ctx.fillStyle='#1a5c10'; ctx.textAlign='left';
+          wrapText(ctx, text, px+30, ty+42, contentW-160, 54, 99);
         }
-        if(line)lines.push(line);
-        return lines.length;
-      };
-      const wordLineCount=wrapMeasure(record.words||'',contentW-160);
-      const bubbleH=Math.max(130,wordLineCount*54+60);
-
-      ctx.font='70px serif'; ctx.textAlign='left';
-      ctx.fillText('👧',px,ty+60);
-      ctx.fillStyle='rgba(255,255,255,0.92)';
-      ctx.shadowColor='rgba(0,0,0,0.08)'; ctx.shadowBlur=15;
-      roundRect(ctx,px+100,ty,contentW-100,bubbleH,20);
-      ctx.fill();
-      ctx.shadowBlur=0;
-      ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-      ctx.fillStyle='#333'; ctx.textAlign='left';
-      wrapText(ctx,record.words||'',px+130,ty+42,contentW-160,54,99);
-      ty+=bubbleH+24;
-
-      if(record.feeling){
-        const feelLineCount=wrapMeasure(record.feeling,contentW-140);
-        const feelH=Math.max(120,feelLineCount*54+60);
-        ctx.fillStyle='rgba(255,107,107,0.12)';
-        ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=10;
-        roundRect(ctx,px,ty,contentW-80,feelH,20);
-        ctx.fill();
-        ctx.shadowBlur=0;
-        ctx.font='36px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-        ctx.fillStyle='#FF6B6B'; ctx.textAlign='left';
-        wrapText(ctx,record.feeling,px+30,ty+42,contentW-140,54,99);
-        ctx.font='70px serif'; ctx.textAlign='right';
-        ctx.fillText('💝',CANVAS_W-120,ty+feelH/2+20);
-      }
+        ty += bH+24;
+        ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      });
       ctx.restore();
 
     } else {
