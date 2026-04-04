@@ -147,14 +147,26 @@ img{max-width:100%;display:block}
 #preview-overlay{
   position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.85);
   display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;
+  overflow-y:auto;padding:20px 0;box-sizing:border-box;
 }
 #preview-overlay.open{display:flex}
 #preview-canvas{
   max-width:min(90vw,360px);max-height:80vh;border-radius:12px;
   box-shadow:0 8px 40px rgba(0,0,0,.5);
 }
+#preview-images{
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  width:100%;
+}
+#preview-images img{
+  max-width:min(90vw,360px);border-radius:12px;
+  box-shadow:0 8px 40px rgba(0,0,0,.5);display:block;
+}
+.preview-page-label{
+  color:rgba(255,255,255,.55);font-size:12px;text-align:center;margin-top:2px;
+}
 .preview-hint{color:rgba(255,255,255,.7);font-size:13px;text-align:center}
-.preview-btns{display:flex;gap:10px}
+.preview-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
 .preview-close-btn{
   padding:10px 28px;border-radius:25px;
   background:rgba(255,255,255,.15);color:white;font-size:14px;font-weight:600;
@@ -374,10 +386,12 @@ img{max-width:100%;display:block}
 
 <!-- Canvas 图片预览 -->
 <div id="preview-overlay">
-  <canvas id="preview-canvas"></canvas>
-  <div class="preview-hint">长按图片可保存到手机相册 📱</div>
+  <canvas id="preview-canvas" style="display:none"></canvas>
+  <div id="preview-images"></div>
+  <div class="preview-hint" id="preview-hint">长按图片可保存到手机相册 📱</div>
   <div class="preview-btns">
     <button class="preview-dl-btn" id="preview-dl">⬇️ 下载图片</button>
+    <button class="preview-dl-all" id="preview-dl-all" style="display:none;padding:10px 28px;border-radius:25px;background:#4CAF50;color:white;font-size:14px;font-weight:600;">⬇️ 全部下载</button>
     <button class="preview-close-btn" id="preview-close">关闭</button>
   </div>
 </div>
@@ -1653,20 +1667,84 @@ function drawFooter(ctx, dateStr, canvasH) {
 
 // 显示预览弹窗
 function showCanvasPreview(canvas, filename) {
+  // 单张模式：用 canvas 元素展示
   const previewCanvas = document.getElementById('preview-canvas');
   const ctx2 = previewCanvas.getContext('2d');
   previewCanvas.width  = canvas.width;
   previewCanvas.height = canvas.height;
   ctx2.drawImage(canvas,0,0);
+  previewCanvas.style.display = '';
+
+  // 清空多图容器
+  const imgBox = document.getElementById('preview-images');
+  imgBox.innerHTML = '';
+  document.getElementById('preview-dl-all').style.display = 'none';
+  document.getElementById('preview-hint').textContent = '长按图片可保存到手机相册 📱';
 
   document.getElementById('preview-overlay').classList.add('open');
-
+  document.getElementById('preview-dl').style.display = '';
   document.getElementById('preview-dl').onclick = ()=>{
     const a = document.createElement('a');
     a.download = filename||'sherry-life.png';
     a.href = canvas.toDataURL('image/png');
     a.click();
   };
+}
+
+// 多张图预览：canvases = [{canvas, filename}, ...]
+function showCanvasListPreview(canvases) {
+  // 隐藏单张 canvas
+  const previewCanvas = document.getElementById('preview-canvas');
+  previewCanvas.style.display = 'none';
+  document.getElementById('preview-dl').style.display = 'none';
+
+  const imgBox = document.getElementById('preview-images');
+  imgBox.innerHTML = '';
+
+  const dataUrls = canvases.map(({canvas}) => canvas.toDataURL('image/png'));
+
+  canvases.forEach(({canvas, filename}, i) => {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
+
+    const img = document.createElement('img');
+    img.src = dataUrls[i];
+    img.style.maxWidth = 'min(90vw,360px)';
+    img.style.borderRadius = '12px';
+    img.style.boxShadow = '0 8px 40px rgba(0,0,0,.5)';
+    wrap.appendChild(img);
+
+    if (canvases.length > 1) {
+      const label = document.createElement('div');
+      label.className = 'preview-page-label';
+      label.textContent = `第 ${i+1} 张 / 共 ${canvases.length} 张`;
+      wrap.appendChild(label);
+    }
+    imgBox.appendChild(wrap);
+  });
+
+  const hint = document.getElementById('preview-hint');
+  hint.textContent = canvases.length > 1
+    ? `共 ${canvases.length} 张，逐张长按图片保存到相册 📱`
+    : '长按图片可保存到手机相册 📱';
+
+  // 全部下载按钮
+  const dlAll = document.getElementById('preview-dl-all');
+  dlAll.style.display = '';
+  dlAll.onclick = () => {
+    canvases.forEach(({canvas, filename}, i) => {
+      setTimeout(() => {
+        const a = document.createElement('a');
+        a.download = filename || `sherry-life-${i+1}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      }, i * 300);
+    });
+  };
+
+  document.getElementById('preview-overlay').classList.add('open');
+  // 滚到顶
+  document.getElementById('preview-overlay').scrollTop = 0;
 }
 
 // ── 运动打卡综合卡片 ──
@@ -2485,36 +2563,57 @@ function genCard(type, recordOrId) {
     const OVERHEAD   = HEADER_H + IMG_H + CARD_MARGIN_TOP + CARD_PAD + FOOTER_H + BOTTOM_PAD + 60;
 
     let convFontSize = 38;
-    let convMsgsToRender = type === 'conversation' ? (convMigrate(record).messages || []) : null;
+    let convPages = null; // array of message arrays for multi-page, null = not conversation
 
-    // Step A: try shrinking font down to 28px
     if (type === 'conversation') {
-      let measured = measureContent(type, record, hasImg, mctx, convFontSize, convMsgsToRender);
+      const allMsgs = convMigrate(record).messages || [];
+
+      // Step A: try shrinking font to fit all in one page
+      let measured = measureContent(type, record, hasImg, mctx, convFontSize, allMsgs);
       if (measured + OVERHEAD > MAX_H) {
-        // Binary-search font size between 28 and 38
         let lo = 28, hi = 38;
         for (let i = 0; i < 6; i++) {
           const mid = Math.round((lo + hi) / 2);
-          const m = measureContent(type, record, hasImg, mctx, mid, convMsgsToRender);
+          const m = measureContent(type, record, hasImg, mctx, mid, allMsgs);
           if (m + OVERHEAD <= MAX_H) lo = mid; else hi = mid - 1;
         }
         convFontSize = Math.max(28, lo);
-        measured = measureContent(type, record, hasImg, mctx, convFontSize, convMsgsToRender);
+        measured = measureContent(type, record, hasImg, mctx, convFontSize, allMsgs);
       }
 
-      // Step B: still too tall → truncate messages from the end (keep reflection)
+      // Step B: still too tall → split into pages
       if (measured + OVERHEAD > MAX_H) {
-        let msgs = [...convMsgsToRender];
-        while (msgs.length > 1) {
-          msgs = msgs.slice(0, msgs.length - 1);
-          const m = measureContent(type, record, hasImg, mctx, convFontSize, msgs);
-          if (m + OVERHEAD <= MAX_H) break;
+        convPages = [];
+        let remaining = [...allMsgs];
+        // last page: reflection + as many trailing msgs as fit (at least 1)
+        // build pages greedily from the front
+        while (remaining.length > 0) {
+          let pageMsgs = [];
+          // For last batch: include reflection; earlier pages: no reflection
+          const isLast = false; // we'll handle reflection on the final page
+          for (let k = 1; k <= remaining.length; k++) {
+            const batch = remaining.slice(0, k);
+            // check if this batch fits (without reflection, except on last page)
+            const testRecord = k === remaining.length ? record : {...record, reflection: null};
+            const m = measureContent(type, testRecord, false, mctx, convFontSize, batch);
+            if (m + OVERHEAD <= MAX_H) {
+              pageMsgs = batch;
+            } else {
+              break;
+            }
+          }
+          if (pageMsgs.length === 0) pageMsgs = [remaining[0]]; // at least 1 msg per page
+          convPages.push(pageMsgs);
+          remaining = remaining.slice(pageMsgs.length);
         }
-        convMsgsToRender = msgs;
+        // reflection goes on the last page
       }
     }
 
-    const contentMeasured = measureContent(type, record, hasImg, mctx, convFontSize, convMsgsToRender);
+    // For single-page path
+    const convMsgsToRender = convPages ? convPages[0] : (type==='conversation' ? (convMigrate(record).messages||[]) : null);
+    const singlePageRecord = convPages && convPages.length > 1 ? {...record, reflection: null} : record;
+    const contentMeasured = measureContent(type, singlePageRecord, hasImg, mctx, convFontSize, convMsgsToRender);
 
     // ── 3. compute canvas height ──
     const cardH      = contentMeasured + CARD_PAD + 60;
@@ -2613,8 +2712,8 @@ function genCard(type, recordOrId) {
       const cAvatarSz = Math.round(cfs * 1.84);
       const cAvatarFs = Math.round(cfs * 1.84); // emoji size
       const cInnerPad = Math.round(cfs * 0.55);
-      const msgsToRender = convMsgsToRender || (convMigrate(record).messages||[]);
-      const truncated = convMsgsToRender && convMsgsToRender.length < (convMigrate(record).messages||[]).length;
+      const msgsToRender = _pageMsgs || convMsgsToRender || (convMigrate(record).messages||[]);
+      const truncated = false; // multi-page replaces truncation
 
       ctx.font=`${cfs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
       msgsToRender.forEach(m => {
@@ -2656,13 +2755,13 @@ function genCard(type, recordOrId) {
         ty += 48;
       }
 
-      // 花花的感触
-      if(record.reflection){
+      // 花花的感触（多页时第一页不渲染，最后页才渲染）
+      if(singlePageRecord.reflection){
         ty += 16;
         const rfFs = Math.max(Math.round(cfs*0.84), 26);
         const rfLH = Math.round(rfFs*1.38);
         ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
-        const rfLines = wrapText(ctx, record.reflection, px+20, ty, contentW-40, rfLH, 99);
+        const rfLines = wrapText(ctx, singlePageRecord.reflection, px+20, ty, contentW-40, rfLH, 99);
         const rfH = Math.max(100, rfLines*rfLH+60);
         ctx.fillStyle='rgba(255,248,200,0.9)';
         ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=8;
@@ -2676,7 +2775,7 @@ function genCard(type, recordOrId) {
         ctx.fillText('💛 花花的感触', px+24, ty+Math.round(rfFs*0.9));
         ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
         ctx.fillStyle='#6b5000';
-        wrapText(ctx, record.reflection, px+24, ty+Math.round(rfFs*0.9)+rfLH+8, contentW-48, rfLH, 99);
+        wrapText(ctx, singlePageRecord.reflection, px+24, ty+Math.round(rfFs*0.9)+rfLH+8, contentW-48, rfLH, 99);
       }
       ctx.restore();
 
@@ -2698,8 +2797,91 @@ function genCard(type, recordOrId) {
 
     drawFooter(ctx, fmtDate(record.date), canvasH);
     const typeLabel={food:'美食',travel:'出游',parenting:'育儿',conversation:'对话',custom:'记录'}[type]||type;
-    showCanvasPreview(canvas, `${typeLabel}-${record.date}.png`);
-    toast('📷 图片已生成，可长按保存！');
+
+    // ── multi-page for conversation ──
+    if (type === 'conversation' && convPages && convPages.length > 1) {
+      // first page already drawn above (canvas) — now draw remaining pages
+      const allCanvases = [{canvas, filename:`对话-${record.date}-1.png`}];
+
+      // helper: draw one conversation page
+      async function drawConvPage(pageMsgs, pageRecord) {
+        const pm = measureContent('conversation', pageRecord, false, mctx, convFontSize, pageMsgs);
+        const pcH = Math.min(MAX_H, Math.max(1080, HEADER_H + CARD_MARGIN_TOP + (pm + CARD_PAD + 60) + FOOTER_H + BOTTOM_PAD));
+        const pc = document.createElement('canvas');
+        pc.width = CANVAS_W; pc.height = pcH;
+        const pctx = pc.getContext('2d');
+        await drawCardBase(pctx, theme, hdr.icon, hdr.text, pcH);
+        const ppx = 110, pcontentW = CANVAS_W - 220;
+        let pty = 200;
+        pctx.save();
+        pctx.fillStyle = 'rgba(255,255,255,0.93)';
+        pctx.shadowColor='rgba(0,0,0,0.1)'; pctx.shadowBlur=30;
+        const pcardH = pm + CARD_PAD + 60;
+        roundRect(pctx, 60, pty, CANVAS_W-120, pcardH, 36);
+        pctx.fill(); pctx.restore();
+        pty += 80; // card top padding
+        // draw conversation bubbles using shared draw logic
+        let _pageMsgs = pageMsgs; // picked up by the closure in drawCard
+        const cfs2 = convFontSize;
+        const cLH2 = Math.round(cfs2*1.42), cAv2=Math.round(cfs2*1.84), cIp2=Math.round(cfs2*0.55);
+        pctx.font=`${cfs2}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        pageMsgs.forEach(m => {
+          const isQ = m.speaker==='qiqi';
+          const icon = isQ?'🧒':'👩';
+          const txt = m.text||'';
+          const lc = wrapText(pctx, txt, ppx+cAv2+24, pty, pcontentW-cAv2-48, cLH2, 99);
+          const bH = Math.max(cAv2+16, lc*cLH2+cIp2);
+          pctx.font=`${cAv2}px serif`; pctx.textAlign=isQ?'left':'right';
+          pctx.fillText(icon, isQ?ppx:CANVAS_W-ppx-cAv2, pty+cAv2-4);
+          if(isQ){
+            pctx.fillStyle='rgba(255,255,255,0.92)'; pctx.shadowColor='rgba(0,0,0,0.08)'; pctx.shadowBlur=15;
+            roundRect(pctx,ppx+cAv2+8,pty,pcontentW-cAv2-8,bH,16); pctx.fill(); pctx.shadowBlur=0;
+            pctx.font=`${cfs2}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+            pctx.fillStyle='#333'; pctx.textAlign='left';
+            wrapText(pctx,txt,ppx+cAv2+24,pty+Math.round(cfs2*1.1),pcontentW-cAv2-48,cLH2,99);
+          } else {
+            pctx.fillStyle='rgba(149,236,105,0.82)'; pctx.shadowColor='rgba(0,0,0,0.06)'; pctx.shadowBlur=12;
+            roundRect(pctx,ppx,pty,pcontentW-cAv2-8,bH,16); pctx.fill(); pctx.shadowBlur=0;
+            pctx.font=`${cfs2}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+            pctx.fillStyle='#1a5c10'; pctx.textAlign='left';
+            wrapText(pctx,txt,ppx+16,pty+Math.round(cfs2*1.1),pcontentW-cAv2-48,cLH2,99);
+          }
+          pty += bH+Math.round(cfs2*0.53);
+          pctx.font=`${cfs2}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        });
+        // reflection on last page
+        if(pageRecord.reflection){
+          pty+=16;
+          const rfFs=Math.max(Math.round(cfs2*0.84),26), rfLH=Math.round(rfFs*1.38);
+          pctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+          const rfL=wrapText(pctx,pageRecord.reflection,ppx+24,pty,pcontentW-48,rfLH,99);
+          const rfH=Math.max(100,rfL*rfLH+60);
+          pctx.fillStyle='rgba(255,248,200,0.9)'; pctx.shadowColor='rgba(0,0,0,0.05)'; pctx.shadowBlur=8;
+          roundRect(pctx,ppx,pty-10,pcontentW,rfH+20,16); pctx.fill(); pctx.shadowBlur=0;
+          pctx.fillStyle='#f5c842'; roundRect(pctx,ppx,pty-10,8,rfH+20,4); pctx.fill();
+          pctx.font=`bold ${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+          pctx.fillStyle='#c89a00'; pctx.textAlign='left';
+          pctx.fillText('💛 花花的感触',ppx+24,pty+Math.round(rfFs*0.9));
+          pctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+          pctx.fillStyle='#6b5000';
+          wrapText(pctx,pageRecord.reflection,ppx+24,pty+Math.round(rfFs*0.9)+rfLH+8,pcontentW-48,rfLH,99);
+        }
+        drawFooter(pctx, fmtDate(record.date), pcH);
+        return pc;
+      }
+
+      for (let pi = 1; pi < convPages.length; pi++) {
+        const isLastPage = pi === convPages.length - 1;
+        const pageRecord = isLastPage ? record : {...record, reflection: null};
+        const pc = await drawConvPage(convPages[pi], pageRecord);
+        allCanvases.push({canvas: pc, filename:`对话-${record.date}-${pi+1}.png`});
+      }
+      showCanvasListPreview(allCanvases);
+      toast(`📷 共生成 ${allCanvases.length} 张图，逐张长按保存！`);
+    } else {
+      showCanvasPreview(canvas, `${typeLabel}-${record.date}.png`);
+      toast('📷 图片已生成，可长按保存！');
+    }
   })();
 }
 
