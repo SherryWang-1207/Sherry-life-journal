@@ -1969,7 +1969,7 @@ function genParentingSummaryCard() {
     return 60 + titleLines*52 + contentLines*44 + 36; // padding + title + content + bottom
   };
   const totalContent = recs.reduce((s,r)=>s+itemH(r)+24, 0) || 280;
-  const CH = Math.max(1440, HEADER_H + PAD + totalContent + FOOTER_H + 60);
+  const CH = Math.max(600, HEADER_H + PAD + totalContent + FOOTER_H + 60);
 
   const canvas = document.createElement('canvas');
   canvas.width = CANVAS_W; canvas.height = CH;
