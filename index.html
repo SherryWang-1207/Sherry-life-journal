@@ -2308,87 +2308,143 @@ function genConversationSummaryCard() {
   const recs = [...(S.data.conversation?.records||[])].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3);
   const today = todaySH();
   const theme = {bg:['#A8E6CF','#C7F5F2','#F0FFF8'], accent:'#2a7d78'};
-  const canvas = document.createElement('canvas');
-  canvas.width = CANVAS_W; canvas.height = CANVAS_H;
-  const ctx = canvas.getContext('2d');
+
+  const FS = 34, LH = Math.round(FS*1.42), AV = Math.round(FS*1.84), IP = Math.round(FS*0.55);
+  const PX = 80, CONTENT_W = CANVAS_W - PX*2;
+  const BUBBLE_TEXT_W = CONTENT_W - AV - 48;
+  const HEADER_H = 200, FOOTER_H = 100, CARD_PAD = 60;
+  const MAX_H = 4800;
+
+  const mCanvas = document.createElement('canvas');
+  mCanvas.width = CANVAS_W; mCanvas.height = 100;
+  const mCtx = mCanvas.getContext('2d');
+
+  function measureSummary(recsArr) {
+    let h = HEADER_H + CARD_PAD;
+    recsArr.forEach(r => {
+      h += 44 + 12;
+      const msgs = convMigrate(r).messages || [];
+      msgs.forEach(m => {
+        mCtx.font = `${FS}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        const lc = wrapText(mCtx, m.text||'', PX+AV+24, -9999, BUBBLE_TEXT_W, LH, 99);
+        h += Math.max(AV+16, lc*LH+IP) + 14;
+      });
+      if(r.reflection) {
+        const rfFs = Math.max(Math.round(FS*0.84), 26);
+        const rfLH = Math.round(rfFs*1.38);
+        mCtx.font = `${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        const rfL = wrapText(mCtx, r.reflection, PX+24, -9999, CONTENT_W-48, rfLH, 99);
+        const rfHeaderH = Math.round(rfFs*0.9) + rfLH + 8;
+        h += Math.max(120, rfHeaderH + rfL*rfLH + 20) + 16 + 20;
+      }
+      h += 32;
+    });
+    h += CARD_PAD + FOOTER_H;
+    return h;
+  }
+
   (async()=>{
-    await drawCardBase(ctx, theme, '💬', '对话');
+    if(!recs.length) {
+      const canvas = document.createElement('canvas');
+      canvas.width = CANVAS_W; canvas.height = 1080;
+      const ctx = canvas.getContext('2d');
+      await drawCardBase(ctx, theme, '💬', '对话');
+      ctx.font='120px serif'; ctx.textAlign='center';
+      ctx.fillText('💬', CANVAS_W/2, 500);
+      ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.fillStyle='#aaa'; ctx.textAlign='center';
+      ctx.fillText('还没有对话记录，快去记录吧～', CANVAS_W/2, 600);
+      drawFooter(ctx, fmtDate(today), 1080);
+      showCanvasPreview(canvas, `亲子对话-${today}.png`);
+      toast('📷 对话汇总图已生成！');
+      return;
+    }
+
+    const totalH = Math.min(MAX_H, Math.max(1080, measureSummary(recs)));
+    const canvas = document.createElement('canvas');
+    canvas.width = CANVAS_W; canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    await drawCardBase(ctx, theme, '💬', '对话', totalH);
+
+    const cardInnerH = totalH - HEADER_H - FOOTER_H - 40;
     ctx.save();
     ctx.fillStyle='rgba(255,255,255,0.93)';
     ctx.shadowColor='rgba(0,0,0,0.1)'; ctx.shadowBlur=30;
-    roundRect(ctx,60,220,CANVAS_W-120,1080,40);
+    roundRect(ctx, 60, HEADER_H-20, CANVAS_W-120, cardInnerH, 40);
     ctx.fill(); ctx.restore();
 
-    ctx.save();
-    ctx.font='bold 52px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-    ctx.fillStyle=theme.accent; ctx.textAlign='center';
-    ctx.fillText('亲子对话记录 💬', CANVAS_W/2, 300);
-    ctx.font='32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-    ctx.fillStyle='#aaa';
-    ctx.fillText(fmtDate(today), CANVAS_W/2, 355);
-    ctx.restore();
+    let ty = HEADER_H + CARD_PAD - 10;
 
-    if(!recs.length){
+    recs.forEach(r => {
+      const msgs = convMigrate(r).messages || [];
       ctx.save();
-      ctx.font='120px serif'; ctx.textAlign='center';
-      ctx.fillText('💬', CANVAS_W/2, 700);
-      ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      ctx.font='28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       ctx.fillStyle='#aaa'; ctx.textAlign='center';
-      ctx.fillText('还没有对话记录，快去记录吧～', CANVAS_W/2, 790);
+      ctx.fillText(fmtDate(r.date), CANVAS_W/2, ty+28);
       ctx.restore();
-    } else {
-      let ty = 385;
-      recs.forEach((r)=>{
-        const msgs = convMigrate(r).messages || [];
-        ctx.save();
-        // 日期分割
-        ctx.font='28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-        ctx.fillStyle='#bbb'; ctx.textAlign='center';
-        ctx.fillText(fmtDate(r.date), CANVAS_W/2, ty);
-        ty += 44;
+      ty += 44 + 12;
 
-        msgs.forEach(m => {
-          const isQiqi = m.speaker === 'qiqi';
-          const icon = isQiqi ? '🧒' : '👩';
-          const text = m.text || '';
-          const linesEst = Math.ceil(text.length / 18);
-          const bH = Math.min(isQiqi ? 140 : 120, 50 + linesEst * 46);
-
-          if(isQiqi){
-            // 左侧气泡
-            ctx.fillStyle='rgba(255,255,255,0.92)';
-            ctx.shadowColor='rgba(0,0,0,0.06)'; ctx.shadowBlur=12;
-            roundRect(ctx, 90, ty, CANVAS_W-240, bH, 20);
-            ctx.fill(); ctx.shadowBlur=0;
-            ctx.font='36px serif'; ctx.textAlign='left';
-            ctx.fillText(icon, 94, ty+bH/2+12);
-            ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-            ctx.fillStyle='#333'; ctx.textAlign='left';
-            wrapText(ctx, text, 154, ty+38, CANVAS_W-330, 46, 3);
-          } else {
-            // 右侧气泡（花花）
-            ctx.fillStyle='rgba(149,236,105,0.7)';
-            ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=10;
-            roundRect(ctx, 160, ty, CANVAS_W-240, bH, 20);
-            ctx.fill(); ctx.shadowBlur=0;
-            ctx.font='36px serif'; ctx.textAlign='right';
-            ctx.fillText(icon, CANVAS_W-104, ty+bH/2+12);
-            ctx.font='34px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
-            ctx.fillStyle='#1a5c10'; ctx.textAlign='left';
-            wrapText(ctx, text, 174, ty+38, CANVAS_W-330, 46, 3);
-          }
-          ty += bH + 14;
-        });
-        ty += 20;
-        ctx.restore();
+      ctx.font = `${FS}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+      msgs.forEach(m => {
+        const isQiqi = m.speaker === 'qiqi';
+        const icon = isQiqi ? '🧒' : '👩';
+        const text = m.text || '';
+        const lc = wrapText(ctx, text, PX+AV+24, -9999, BUBBLE_TEXT_W, LH, 99);
+        const bH = Math.max(AV+16, lc*LH+IP);
+        ctx.font=`${AV}px serif`; ctx.textAlign = isQiqi ? 'left' : 'right';
+        ctx.fillStyle='#000';
+        ctx.fillText(icon, isQiqi ? PX : CANVAS_W-PX-AV, ty+AV-4);
+        if(isQiqi){
+          ctx.fillStyle='rgba(255,255,255,0.92)';
+          ctx.shadowColor='rgba(0,0,0,0.08)'; ctx.shadowBlur=15;
+          roundRect(ctx, PX+AV+8, ty, CONTENT_W-AV-8, bH, 16);
+          ctx.fill(); ctx.shadowBlur=0;
+          ctx.font=`${FS}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+          ctx.fillStyle='#333'; ctx.textAlign='left';
+          wrapText(ctx, text, PX+AV+24, ty+Math.round(FS*1.1), BUBBLE_TEXT_W, LH, 99);
+        } else {
+          ctx.fillStyle='rgba(149,236,105,0.82)';
+          ctx.shadowColor='rgba(0,0,0,0.06)'; ctx.shadowBlur=12;
+          roundRect(ctx, PX, ty, CONTENT_W-AV-8, bH, 16);
+          ctx.fill(); ctx.shadowBlur=0;
+          ctx.font=`${FS}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+          ctx.fillStyle='#1a5c10'; ctx.textAlign='left';
+          wrapText(ctx, text, PX+16, ty+Math.round(FS*1.1), BUBBLE_TEXT_W, LH, 99);
+        }
+        ty += bH + 14;
+        ctx.font=`${FS}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
       });
-    }
-    drawFooter(ctx, fmtDate(today));
+
+      if(r.reflection){
+        ty += 8;
+        const rfFs = Math.max(Math.round(FS*0.84), 26);
+        const rfLH = Math.round(rfFs*1.38);
+        ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        const rfL = wrapText(ctx, r.reflection, PX+24, -9999, CONTENT_W-48, rfLH, 99);
+        const rfHeaderH = Math.round(rfFs*0.9) + rfLH + 8;
+        const rfH = Math.max(120, rfHeaderH + rfL*rfLH + 20);
+        ctx.fillStyle='rgba(255,248,200,0.9)';
+        ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=8;
+        roundRect(ctx, PX, ty-10, CONTENT_W, rfH+20, 16); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle='#f5c842';
+        roundRect(ctx, PX, ty-10, 8, rfH+20, 4); ctx.fill();
+        ctx.font=`bold ${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        ctx.fillStyle='#c89a00'; ctx.textAlign='left';
+        ctx.fillText('💛 花花的感触', PX+24, ty+Math.round(rfFs*0.9));
+        ctx.font=`${rfFs}px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif`;
+        ctx.fillStyle='#6b5000';
+        wrapText(ctx, r.reflection, PX+24, ty+rfHeaderH, CONTENT_W-48, rfLH, 99);
+        ty += rfH + 20 + 16;
+      }
+
+      ty += 32;
+    });
+
+    drawFooter(ctx, fmtDate(today), totalH);
     showCanvasPreview(canvas, `亲子对话-${today}.png`);
     toast('📷 对话汇总图已生成！');
   })();
 }
-
 // 自定义 tab 汇总卡片
 function genCustomSummaryCard(tabId) {
   const tabInfo = S.customTabs.find(t=>t.id===tabId)||{label:'自定义'};
