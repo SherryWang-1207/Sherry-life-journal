@@ -274,6 +274,11 @@ img{max-width:100%;display:block}
 .bubble-left-wrap{display:flex;flex-direction:column;align-items:flex-start;width:72%;min-width:0}
 .bubble-right-wrap{display:flex;flex-direction:column;align-items:flex-end;width:72%;min-width:0}
 .conv-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:4px;padding-right:46px}
+/* 花花的感触 */
+.conv-reflection{background:linear-gradient(135deg,#fff9e6,#fff3cc);border-left:3px solid #f5c842;border-radius:0 10px 10px 0;padding:10px 14px;margin:6px 8px 10px 8px;font-size:13px;color:#6b5000;line-height:1.6;position:relative}
+.conv-reflection-label{font-size:11px;font-weight:600;color:#c89a00;margin-bottom:4px;display:flex;align-items:center;gap:4px}
+.conv-reflection-add{display:block;width:100%;text-align:center;background:rgba(245,200,66,.15);border:1px dashed #f5c842;border-radius:8px;color:#c89a00;font-size:12px;padding:6px;margin:4px 8px 10px;box-sizing:border-box;cursor:pointer;width:calc(100% - 16px)}
+.conv-reflection-add:hover{background:rgba(245,200,66,.28)}
 
 /* ===== CUSTOM ===== */
 .custom-list{display:flex;flex-direction:column;gap:12px}
@@ -926,9 +931,17 @@ function renderConversation() {
     <div class="bubble-wrap conv-thread" id="thread-${r.id}">
       ${renderConvBubbles(r.messages||[])}
     </div>
+    ${r.reflection
+      ? `<div class="conv-reflection">
+           <div class="conv-reflection-label">💛 花花的感触</div>
+           <div>${escHtml(r.reflection)}</div>
+           <button style="float:right;border:none;background:none;font-size:12px;color:#c89a00;cursor:pointer;margin-top:4px" onclick="openEditReflection('${r.id}')">✏️ 编辑</button>
+         </div>`
+      : `<button class="conv-reflection-add" onclick="openEditReflection('${r.id}')">💛 + 添加花花的感触</button>`
+    }
     <div class="conv-actions">
-      <button class="action-btn" style="background:#e8f5e9;color:#388e3c" onclick="openEditConversationById('${r.id}')">✏️ 编辑</button>
-      <button class="action-btn action-img" onclick='genCard("conversation",${JSON.stringify(r)})'>📷 生成图片</button>
+      <button class="action-btn" style="background:#e8f5e9;color:#388e3c" onclick="openEditConversationById('${r.id}')">✏️ 编辑对话</button>
+      <button class="action-btn action-img" onclick="genCard('conversation','${r.id}')">📷 生成图片</button>
       <button class="action-btn action-del" onclick="delRecord('conversation','${r.id}')">删除</button>
     </div>
   `).join('')}</div>`;
@@ -1270,6 +1283,37 @@ async function saveConversation() {
   });
   const ok = await ghPut('data/conversation.json', S.data.conversation);
   if(ok){ toast(isEdit?'✏️ 对话已更新！':'💬 对话已记录！'); closeModal(); renderMain(); }
+}
+
+// ── 花花的感触 ──
+function openEditReflection(id) {
+  const raw = (S.data.conversation?.records||[]).find(r=>r.id===id);
+  if(!raw){ toast('找不到该对话'); return; }
+  openModal('💛 花花的感触', `
+    <p style="font-size:13px;color:#888;margin-bottom:10px">记录这段对话让你想到了什么、感受到了什么～</p>
+    <div class="form-group">
+      <textarea class="form-textarea" id="rf-text" style="min-height:110px" placeholder="此刻的心情、感悟、或想对小七说的话……">${escHtml(raw.reflection||'')}</textarea>
+    </div>
+    <div style="display:flex;gap:8px">
+      ${raw.reflection ? `<button class="btn btn-sm" style="background:#fce4e4;color:#c0392b;flex:1" onclick="saveReflection('${id}',true)">🗑️ 删除感触</button>` : ''}
+      <button class="btn btn-full" style="background:linear-gradient(135deg,#ffeaa7,#fdcb6e);color:#6b4f00;font-weight:600;flex:2" onclick="saveReflection('${id}')">💾 保存感触</button>
+    </div>
+  `);
+}
+
+async function saveReflection(id, del=false) {
+  const records = S.data.conversation?.records||[];
+  const idx = records.findIndex(r=>r.id===id);
+  if(idx<0){ toast('找不到该对话'); return; }
+  if(del){
+    delete records[idx].reflection;
+  } else {
+    const text = document.getElementById('rf-text').value.trim();
+    if(!text){ toast('请输入感触内容'); return; }
+    records[idx].reflection = text;
+  }
+  const ok = await ghPut('data/conversation.json', S.data.conversation);
+  if(ok){ toast(del?'已删除感触':'💛 感触已保存！'); closeModal(); renderMain(); }
 }
 
 function openAddCustomRecord(tabId) {
@@ -2179,6 +2223,11 @@ function measureContent(type, record, hasImg, ctx) {
       const linesEst = wrapText(ctx, m.text||'', px+130, ty, contentW-160, 54, 99);
       ty += Math.max(130, linesEst*54+60) + 20;
     });
+    if(record.reflection){
+      ctx.font = '32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+      const rfL = wrapText(ctx, record.reflection, px+24, ty, contentW-48, 44, 99);
+      ty += Math.max(100, rfL*44+80) + 16;
+    }
   } else {
     if (record.title) {
       ctx.font = 'bold 56px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
@@ -2191,7 +2240,14 @@ function measureContent(type, record, hasImg, ctx) {
   return ty;
 }
 
-function genCard(type, record) {
+function genCard(type, recordOrId) {
+  // conversation tab now passes id string; other tabs pass record object
+  let record = recordOrId;
+  if(type==='conversation' && typeof recordOrId === 'string') {
+    const raw = (S.data.conversation?.records||[]).find(r=>r.id===recordOrId);
+    if(!raw){ toast('找不到该对话'); return; }
+    record = convMigrate(raw);
+  }
   const theme = TAB_THEME[type]||TAB_THEME.custom;
 
   (async()=>{
@@ -2346,6 +2402,28 @@ function genCard(type, record) {
         ty += bH+24;
         ctx.font='38px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
       });
+
+      // 花花的感触
+      if(record.reflection){
+        ty += 16;
+        ctx.font='28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        const rfLines = wrapText(ctx, record.reflection, px+20, ty, contentW-40, 44, 99);
+        const rfH = Math.max(100, rfLines*44+60);
+        ctx.fillStyle='rgba(255,248,200,0.9)';
+        ctx.shadowColor='rgba(0,0,0,0.05)'; ctx.shadowBlur=8;
+        roundRect(ctx, px, ty-10, contentW, rfH+20, 16);
+        ctx.fill(); ctx.shadowBlur=0;
+        // 左侧黄色边条
+        ctx.fillStyle='#f5c842';
+        roundRect(ctx, px, ty-10, 8, rfH+20, 4);
+        ctx.fill();
+        ctx.font='bold 28px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.fillStyle='#c89a00'; ctx.textAlign='left';
+        ctx.fillText('💛 花花的感触', px+24, ty+24);
+        ctx.font='32px -apple-system,PingFang SC,Helvetica Neue,Arial,sans-serif';
+        ctx.fillStyle='#6b5000';
+        wrapText(ctx, record.reflection, px+24, ty+64, contentW-48, 44, 99);
+      }
       ctx.restore();
 
     } else {
